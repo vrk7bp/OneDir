@@ -113,7 +113,11 @@ class MyHandler(FileSystemEventHandler):
     def on_moved(self, event):
         super(MyHandler, self).on_moved(event)
         what = 'Directory' if event.is_directory else 'File'
-        self.currentEvent = what + ", moved, from: " + event.src_path + ", to: " + event.dest_path
+        if(event.src_path is None): # Means that a file(s) has been moved into the OneDir Folder.
+            currentPath = os.path.dirname(os.path.realpath(__file__))
+            self.currentEvent = what + ", created, " + currentPath + "\n" + what + ", moved, from: " + currentPath + ", to: " + event.dest_path
+        else:
+            self.currentEvent = what + ", moved, from: " + event.src_path + ", to: " + event.dest_path
         if(self.update == False):
             file = open("../DoNotDelete.txt", "a+")
             file.write(self.currentEvent + "\n")

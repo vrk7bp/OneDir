@@ -53,9 +53,42 @@ class TSServProtocol(protocol.Protocol):
         # out_msg = '[%s] %s' % (ctime(), in_msg)
         # self.transport.write(out_msg)
 
+    def handle_add_user_cmd(self, msg_data):
+        self.transport.write("Adding user...")
+        try:
+            r = open("user_list.txt", 'r')
+            out = r.readlines()
+            users = []
+
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        users.append(word[j])
+            r.closed
+
+            new_id = msg_data["user_id"]
+            if new_id in users:
+                self.transport.write("Username already in use!")
+            else:
+                w = open("user_list.txt", 'w')
+                for i in range(len(users)):
+                    w.write(users[i])
+                    w.write(" ")
+                w.write(new_id)
+                w.close()
+        except:
+            w = open("user_list.txt", 'w')
+            w.write(msg_data["user_id"])
+            w.write(" ")
+            w.close()
+
+    def handle_file_transfer_cmd(self, msg_data):
+        self.transport.write("Transferring file")
 
     def handle_user_cmd(self, msg_data):
         self.transport.write("response for 'user' cmd")
+        print msg_data["user_id"]
 
     def handle_write_cmd(self, msg_data):
         self.transport.write("response for 'write' cmd")
@@ -75,15 +108,44 @@ class TSServProtocol(protocol.Protocol):
             cmd = None
         print "Server processing: ", cmd
 
-        if cmd == "user":
-            self.handle_user_cmd(msg_data)
-        elif cmd == "write":
-            self.handle_write_cmd(msg_data)
-        elif cmd == "delete":
-            self.handle_delete_cmd(msg_data)
-        else:
-            self.handle_invalid_cmd(json_msg)
+        valid_user = False
+        try:
+            r = open("user_list.txt", 'r')
+            out = r.readlines()
+            users = []
 
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        users.append(word[j])
+            r.closed
+
+            id = msg_data["user_id"]
+            if id in users:
+                valid_user = True
+            else:
+                valid_user = False
+        except:
+            self.transport.write("Invalid User")
+
+        if valid_user:
+            if cmd == "user":
+                self.handle_user_cmd(msg_data)
+            elif cmd == "write":
+                self.handle_write_cmd(msg_data)
+            elif cmd == "delete":
+                self.handle_delete_cmd(msg_data)
+            elif cmd == "add_user":
+                self.handle_add_user_cmd(msg_data)
+            elif cmd == "file_transfer":
+                self.handle_file_transfer_cmd(msg_data)
+            else:
+                self.handle_invalid_cmd(json_msg)
+        elif cmd == "add_user":
+            self.handle_add_user_cmd(msg_data)
+        else:
+            self.transport.write("Invalid User")
 
     def test_process_incoming1(self):
         self.process_incoming('{"cmd" : "user", "user_id" : "horton"}')

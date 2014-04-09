@@ -52,7 +52,24 @@ class TSServProtocol(protocol.Protocol):
         # out_msg = '[%s] %s' % (ctime(), in_msg)
         # self.transport.write(out_msg)
 
-    def check_login_status(self, msg_data):
+    def access_user_list(self):
+        try:
+            r = open("user_list.txt", 'r')
+            out = r.readlines()
+            users = []
+
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        users.append(word[j])
+            r.closed
+
+            return users
+        except:
+            return []
+
+    def check_login_status(self):
         try:
             r = open("login_info.txt", 'r')
             out = r.readlines()
@@ -71,7 +88,7 @@ class TSServProtocol(protocol.Protocol):
         except:
             return False
 
-    def check_login_id(self, msg_data):
+    def check_login_id(self):
         try:
             r = open("login_info.txt", 'r')
             out = r.readlines()
@@ -89,30 +106,21 @@ class TSServProtocol(protocol.Protocol):
 
     def handle_login_cmd(self, msg_data):
         self.transport.write("logging in...")
-        try:
-            r = open("user_list.txt", 'r')
-            out = r.readlines()
-            users = []
 
-            for i in out:
-                word = i.split(" ")
-                for j in range(len(word)):
-                    if word != " ":
-                        users.append(word[j])
-            r.closed
+        users = self.access_user_list()
 
-            id = msg_data["user_id"]
-            if id in users:
-                if self.check_login_status(msg_data):
-                    self.transport.write("Logged in as: " + self.check_login_id(msg_data))
-                else:
-                    w = open("login_info.txt", 'w')
-                    w.write("True " + id)
-                    w.close()
-                    self.transport.write("Login Successful")
+        id = msg_data["user_id"]
+        if id in users:
+            if self.check_login_status():
+                self.transport.write("Logged in as: " + self.check_login_id())
             else:
-                self.transport.write("Invalid User")
-        except:
+                w = open("login_info.txt", 'w')
+                w.write("True " + id)
+                w.close()
+                self.transport.write("Login Successful")
+        elif self.check_login_status():
+            self.transport.write("Logged in as: " + self.check_login_id())
+        else:
             self.transport.write("Invalid User")
 
     def handle_logout_cmd(self, msg_data):
@@ -123,32 +131,31 @@ class TSServProtocol(protocol.Protocol):
 
     def handle_add_user_cmd(self, msg_data):
         self.transport.write("Adding user...")
-        try:
-            r = open("user_list.txt", 'r')
-            out = r.readlines()
-            users = []
 
-            for i in out:
-                word = i.split(" ")
-                for j in range(len(word)):
-                    if word != " ":
-                        users.append(word[j])
-            r.closed
+        users = self.access_user_list()
 
-            new_id = msg_data["user_id"]
-            if new_id in users:
-                self.transport.write("Username already in use!")
-            else:
-                w = open("user_list.txt", 'w')
-                for i in range(len(users)):
-                    w.write(users[i])
-                    w.write(" ")
-                w.write(new_id)
-                w.close()
-        except:
+        new_id = msg_data["user_id"]
+        if new_id in users:
+            self.transport.write("Username already in use!")
+        else:
             w = open("user_list.txt", 'w')
-            w.write(msg_data["user_id"])
-            w.write(" ")
+            for i in range(len(users)):
+                w.write(users[i])
+                w.write(" ")
+            w.write(new_id)
+            w.close()
+
+    def handle_delete_myself_cmd(self, msg_data):
+        self.transport.write(self.check_login_id() + " removed from users")
+        users = self.access_user_list()
+        users.remove(self.check_login_id())
+        self.handle_logout_cmd(msg_data)
+
+        if len(users) > 0:
+            w = open("user_list.txt", 'w')
+            for i in range(len(users)):
+                w.write(users[i])
+                w.write(" ")
             w.close()
 
     def handle_file_transfer_cmd(self, msg_data):
@@ -156,17 +163,12 @@ class TSServProtocol(protocol.Protocol):
 
     def handle_user_cmd(self, msg_data):
         self.transport.write("response for 'user' cmd")
-        print msg_data["user_id"]
 
     def handle_write_cmd(self, msg_data):
         self.transport.write("response for 'write' cmd")
 
-    def handle_delete_cmd(self, msg_data):
-        self.transport.write("response for 'delete' cmd")
-
     def handle_invalid_cmd(self, msg_data):
         self.transport.write("response for 'invalid' cmd")
-
 
     def process_incoming(self, json_msg):
         try:
@@ -176,23 +178,25 @@ class TSServProtocol(protocol.Protocol):
             cmd = None
         print "Server processing: ", cmd
 
-        if self.check_login_status(msg_data):
+        if self.check_login_status():
             if cmd == "user":
                 self.handle_user_cmd(msg_data)
             elif cmd == "write":
                 self.handle_write_cmd(msg_data)
-            elif cmd == "delete":
-                self.handle_delete_cmd(msg_data)
+            elif cmd == "delete_myself":
+                self.handle_delete_myself_cmd(msg_data)
             elif cmd == "add_user":
                 self.handle_add_user_cmd(msg_data)
             elif cmd == "file_transfer":
                 self.handle_file_transfer_cmd(msg_data)
             elif cmd == "login":
-                self.handle_login_cmd(msg_data)
+                self.transport.write("Logged in as: " + self.check_login_id())
             elif cmd == "logout":
                 self.handle_logout_cmd(msg_data)
             else:
                 self.handle_invalid_cmd(json_msg)
+        elif (cmd == "user") or (cmd == "write") or (cmd == "delete_myself") or (cmd == "file_transfer") or (cmd == "logout"):
+            self.transport.write("You must be logged in for that command")
         elif cmd == "login":
             self.handle_login_cmd(msg_data)
         elif cmd == "add_user":

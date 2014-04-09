@@ -42,7 +42,6 @@ PORT = 21567
 
 allowed_users = ["tom", "ali"]
 
-
 class TSServProtocol(protocol.Protocol):
     def connectionMade(self):
         clnt = self.clnt = self.transport.getPeer().host
@@ -52,6 +51,75 @@ class TSServProtocol(protocol.Protocol):
         self.process_incoming(in_msg)
         # out_msg = '[%s] %s' % (ctime(), in_msg)
         # self.transport.write(out_msg)
+
+    def check_login_status(self, msg_data):
+        try:
+            r = open("login_info.txt", 'r')
+            out = r.readlines()
+            info = []
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        info.append(word[j])
+            r.closed
+
+            if word[0] == "True":
+                return True
+            else:
+                return False
+        except:
+            return False
+
+    def check_login_id(self, msg_data):
+        try:
+            r = open("login_info.txt", 'r')
+            out = r.readlines()
+            info = []
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        info.append(word[j])
+            r.closed
+
+            return word[1]
+        except:
+            return ""
+
+    def handle_login_cmd(self, msg_data):
+        self.transport.write("logging in...")
+        try:
+            r = open("user_list.txt", 'r')
+            out = r.readlines()
+            users = []
+
+            for i in out:
+                word = i.split(" ")
+                for j in range(len(word)):
+                    if word != " ":
+                        users.append(word[j])
+            r.closed
+
+            id = msg_data["user_id"]
+            if id in users:
+                if self.check_login_status(msg_data):
+                    self.transport.write("Logged in as: " + self.check_login_id(msg_data))
+                else:
+                    w = open("login_info.txt", 'w')
+                    w.write("True " + id)
+                    w.close()
+                    self.transport.write("Login Successful")
+            else:
+                self.transport.write("Invalid User")
+        except:
+            self.transport.write("Invalid User")
+
+    def handle_logout_cmd(self, msg_data):
+        w = open("login_info.txt", 'w')
+        w.write("False " + "None")
+        w.close()
+        self.transport.write("Logged Out")
 
     def handle_add_user_cmd(self, msg_data):
         self.transport.write("Adding user...")
@@ -108,28 +176,7 @@ class TSServProtocol(protocol.Protocol):
             cmd = None
         print "Server processing: ", cmd
 
-        valid_user = False
-        try:
-            r = open("user_list.txt", 'r')
-            out = r.readlines()
-            users = []
-
-            for i in out:
-                word = i.split(" ")
-                for j in range(len(word)):
-                    if word != " ":
-                        users.append(word[j])
-            r.closed
-
-            id = msg_data["user_id"]
-            if id in users:
-                valid_user = True
-            else:
-                valid_user = False
-        except:
-            self.transport.write("Invalid User")
-
-        if valid_user:
+        if self.check_login_status(msg_data):
             if cmd == "user":
                 self.handle_user_cmd(msg_data)
             elif cmd == "write":
@@ -140,8 +187,14 @@ class TSServProtocol(protocol.Protocol):
                 self.handle_add_user_cmd(msg_data)
             elif cmd == "file_transfer":
                 self.handle_file_transfer_cmd(msg_data)
+            elif cmd == "login":
+                self.handle_login_cmd(msg_data)
+            elif cmd == "logout":
+                self.handle_logout_cmd(msg_data)
             else:
                 self.handle_invalid_cmd(json_msg)
+        elif cmd == "login":
+            self.handle_login_cmd(msg_data)
         elif cmd == "add_user":
             self.handle_add_user_cmd(msg_data)
         else:

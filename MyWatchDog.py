@@ -7,6 +7,10 @@ from watchdog.events import FileSystemEventHandler
 
 #Have to change the value of self.NameOfFile in the FileHandler() class in order for this to work if you move it to another file.
 
+################################# UPDATE LIST FOR WATCHDOG FILE ##########################################################################
+
+########### As of April 1st ....
+
 #Things for me to do...
 #   Create a class that deals with transfering files or commands (based on transfer or deletion or movement).
 #   Then integrate the class in two places. First with the MyHandler() on the else case for auto-updating.
@@ -17,6 +21,11 @@ from watchdog.events import FileSystemEventHandler
 # Also look into how to deal with renames (has to do with the main path not really changing)
 
 # Have to deal with recursive deletion of a folder... like how does this work and how do I look at it (repeated directory delete command).
+
+########### As of April 10th...
+
+# The WatchDog part seems to work fine with everything. Everything such as creation, deletion, movement, renaming, and recursive deleting is dealt
+# with in a way that makes a lot of sense. Just have to integrate with the server...
 
 class FileHandler():
 
@@ -38,6 +47,7 @@ class FileHandler():
         #This works fine for everything except when new directories and files (or combination of both) are moved in. To work around this,
         # I am going to add extra logic that ignores the "create" part of these new files copied in and instead declare a None in the first part
         # of the move command. This will then have to be taken care of by the server...
+
 
         DirectionListInOrder = []
         if(changes[0:4] == 'File'):

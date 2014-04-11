@@ -22,23 +22,6 @@ class TSServProtocol(protocol.Protocol):
     def dataReceived(self, in_msg):
         self.process_incoming(in_msg)
 
-    def access_user_list(self):
-        try:
-            r = open("user_list.txt", 'r')
-            out = r.readlines()
-            users = []
-
-            for i in out:
-                word = i.split(" ")
-                for j in range(len(word)):
-                    if word != " ":
-                        users.append(word[j])
-            r.closed
-
-            return users
-        except:
-            return []
-
     def access_user_table(self):
         try:
             connection = sqlite3.connect(dbName)
@@ -48,16 +31,16 @@ class TSServProtocol(protocol.Protocol):
 
             rows = cursor.fetchall()
             for row in rows:
-                users.append(row[0])
+                users.append(row[0]) #row[0] because the return type is a tuple
+
+            connection.close()
 
             return users
 
         except:
             return []
 
-
-
-    def check_login_status(self):
+    def check_login_status(self): #We will go ahead and keep this log-in mechanism the same, just add a password check to the command handler.
         try:
             r = open("login_info.txt", 'r')
             out = r.readlines()
@@ -76,7 +59,7 @@ class TSServProtocol(protocol.Protocol):
         except:
             return False
 
-    def check_login_id(self):
+    def check_login_id(self): #We will go ahead and keep this log-in mechanism the same, just add a password check to the command handler.
         try:
             r = open("login_info.txt", 'r')
             out = r.readlines()
@@ -95,17 +78,30 @@ class TSServProtocol(protocol.Protocol):
     def handle_login_cmd(self, msg_data):
         self.transport.write("logging in...")
 
-        users = self.access_user_list()
+        users = self.access_user_table()
 
         id = msg_data["user_id"]
+        password = msg_data["password"]
         if id in users:
             if self.check_login_status():
                 self.transport.write("Logged in as: " + self.check_login_id())
             else:
-                w = open("login_info.txt", 'w')
-                w.write("True " + id)
-                w.close()
-                self.transport.write("Login Successful")
+                rightPassword = False
+                connection = sqlite3.connect(dbName)
+                cursor = connection.cursor()
+                cursor.execute("select * from " + tableName + " where userName is \'" + id + "\';")
+                rows = cursor.fetchall()
+                for row in rows:
+                    if(row[1] == password):
+                        rightPassword = True
+                connection.close()
+                if rightPassword:
+                    w = open("login_info.txt", 'w')
+                    w.write("True " + id)
+                    w.close()
+                    self.transport.write(" Login Successful")
+                else:
+                    self.transport.write(" Wrong Password")
         elif self.check_login_status():
             self.transport.write("Logged in as: " + self.check_login_id())
         else:
@@ -117,7 +113,6 @@ class TSServProtocol(protocol.Protocol):
         w.close()
         self.transport.write("Logged Out")
 
-    #This requires two additional inputs for JSON, the userName and Password.
     def handle_add_user_cmd(self, msg_data):
         self.transport.write("Adding user...")
 
@@ -126,26 +121,25 @@ class TSServProtocol(protocol.Protocol):
         new_id = msg_data["user_id"]
         new_pass = msg_data["password"]
         if new_id in users:
-            self.transport.write("Username already in use!")
+            self.transport.write(" Username already in use!")
         else:
             connection = sqlite3.connect(dbName)
             cursor = connection.cursor()
             execute = "INSERT INTO %s (userName, password) VALUES(\'%s\', \'%s\')" % (tableName, new_id, new_pass)
             cursor.execute(execute)
             connection.commit()
+            connection.close()
 
     def handle_delete_myself_cmd(self, msg_data):
         self.transport.write(self.check_login_id() + " removed from users")
-        users = self.access_user_list()
-        users.remove(self.check_login_id())
+        userName = self.check_login_id()
+        connection = sqlite3.connect(dbName)
+        cursor = connection.cursor()
+        execute = "DELETE FROM %s where userName = \'%s\'" % (tableName, userName)
+        cursor.execute(execute)
+        connection.commit()
+        connection.close()
         self.handle_logout_cmd(msg_data)
-
-        if len(users) > 0:
-            w = open("user_list.txt", 'w')
-            for i in range(len(users)):
-                w.write(users[i])
-                w.write(" ")
-            w.close()
 
     def handle_file_transfer_cmd(self, msg_data):
         self.transport.write("Transferring file")
@@ -172,22 +166,22 @@ class TSServProtocol(protocol.Protocol):
                 self.handle_user_cmd(msg_data)
             elif cmd == "write":
                 self.handle_write_cmd(msg_data)
-            elif cmd == "delete_myself":
+            elif cmd == "delete_myself": #Works fine with SQLite3
                 self.handle_delete_myself_cmd(msg_data)
             elif cmd == "add_user":
                 self.handle_add_user_cmd(msg_data)
             elif cmd == "file_transfer":
                 self.handle_file_transfer_cmd(msg_data)
-            elif cmd == "login":
+            elif cmd == "login": #Works fine with SQLite3
                 self.transport.write("Logged in as: " + self.check_login_id())
-            elif cmd == "logout":
+            elif cmd == "logout": #Works fine with SQLite3
                 self.handle_logout_cmd(msg_data)
             else:
                 self.handle_invalid_cmd(json_msg)
         elif (cmd == "user") or (cmd == "write") or (cmd == "delete_myself") or (cmd == "file_transfer") or (cmd == "logout"):
             self.transport.write("You must be logged in for that command")
         elif cmd == "login":
-            self.handle_login_cmd(msg_data)
+            self.handle_login_cmd(msg_data) #Login requires cmd, user_id, password (works with SQLite3)
         elif cmd == "add_user":
             self.handle_add_user_cmd(msg_data) #Add user requires cmd, user_id, password (works with SQLite3)
         else:

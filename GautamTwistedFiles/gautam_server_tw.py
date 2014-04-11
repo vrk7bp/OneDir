@@ -11,7 +11,7 @@ PORT = 21567
 
 allowed_users = ["tom", "ali"]
 
-dbName = "testUserDB.db"
+dbName = "testUserDB"
 tableName = "users"
 
 class TSServProtocol(protocol.Protocol):
@@ -48,7 +48,7 @@ class TSServProtocol(protocol.Protocol):
 
             rows = cursor.fetchall()
             for row in rows:
-                users.append(row)
+                users.append(row[0])
 
             return users
 
@@ -124,7 +124,7 @@ class TSServProtocol(protocol.Protocol):
         users = self.access_user_table()
 
         new_id = msg_data["user_id"]
-        new_pass = msg_date["password"]
+        new_pass = msg_data["password"]
         if new_id in users:
             self.transport.write("Username already in use!")
         else:
@@ -132,7 +132,7 @@ class TSServProtocol(protocol.Protocol):
             cursor = connection.cursor()
             execute = "INSERT INTO %s (userName, password) VALUES(\'%s\', \'%s\')" % (tableName, new_id, new_pass)
             cursor.execute(execute)
-            self.transport.write("User added successfully")
+            connection.commit()
 
     def handle_delete_myself_cmd(self, msg_data):
         self.transport.write(self.check_login_id() + " removed from users")
@@ -189,7 +189,7 @@ class TSServProtocol(protocol.Protocol):
         elif cmd == "login":
             self.handle_login_cmd(msg_data)
         elif cmd == "add_user":
-            self.handle_add_user_cmd(msg_data) #Add user requires cmd, user_id, password
+            self.handle_add_user_cmd(msg_data) #Add user requires cmd, user_id, password (works with SQLite3)
         else:
             self.transport.write("Invalid User")
 

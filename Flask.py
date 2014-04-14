@@ -1,6 +1,5 @@
-from flask import Flask
-from flask import request
-from flask import g
+from flask import Flask, request, g, render_template, redirect, url_for, send_from_directory
+from werkzeug import secure_filename 
 import sys
 import time
 import os
@@ -18,6 +17,10 @@ tableName = "users"
 DATABASE = 'testUserDB'
 
 app = Flask(__name__)
+
+#I think this needs to be changed to the individual user's folder
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 ##### WORKS ####
 def connect_db():
@@ -214,6 +217,27 @@ def handle_logout():
 def handle_command():
 	command = request.headers['Value']
 	return "This is the command recieved: " + command
+
+#checks to see if the extension is allowed to be transferred 
+def allowed_file(filename):
+	return '.' in filename and \
+	    filename.rsplit('.',1)[1] in app.config['ALLOWED_EXTENSIONS']
+
+#uploads file
+@app.route("/upload", methods = ['POST'])
+def upload():
+	#gets name of uploaded file
+	file = request.files['file']
+	if file and allowed_file(file.filename):
+		filename = secure_filename(file.filename)
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		return redirect(url_for('uploaded_file', filename=filename))
+
+#shows uploaded file on the browser after uploaded - not necessary but needed for upload function? 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+	return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+	
 
 
 if __name__ == "__main__":

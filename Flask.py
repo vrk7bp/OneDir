@@ -67,6 +67,7 @@ def access_user_table():
     except:
         return []
 
+#Works...
 @app.route("/check_login", methods = ['GET', 'POST'])
 def check_if_one_login():
 	try:
@@ -86,6 +87,7 @@ def check_if_one_login():
 	except:
 		return ""
 
+#Works...
 def check_login_status(): #We will go ahead and keep this log-in mechanism the same, just add a password check to the command handler.
     try:
         r = open("login_info.txt", 'r')
@@ -105,6 +107,7 @@ def check_login_status(): #We will go ahead and keep this log-in mechanism the s
     except:
         return False
 
+#Works...
 def check_login_id(): #We will go ahead and keep this log-in mechanism the same, just add a password check to the command handler.
     try:
         r = open("login_info.txt", 'r')
@@ -120,7 +123,6 @@ def check_login_id(): #We will go ahead and keep this log-in mechanism the same,
         return word[1]
     except:
         return ""
-#### WORKS ####
 
 @app.route("/", methods = ['GET', 'POST'])
 def hello():
@@ -206,6 +208,13 @@ def handle_logout():
 	w.write("False " + "None")
 	w.close()
 	return "Logged Out"
+#### WORKS ####
+
+@app.route("/command", methods = ['GET', 'POST'])
+def handle_command():
+	command = request.headers['Value']
+	return "This is the command recieved: " + command
+
 
 if __name__ == "__main__":
 	app.run(debug=True)

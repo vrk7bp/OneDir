@@ -1,2 +1,469 @@
+import sys
+import time
+import os
+import threading
+from multiprocessing import Process, Value, Array
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import requests
+import fileinput
+import json
+import sqlite3
+
+HOST = "http://127.0.0.1:5000"
+
+LOGIN_URL = HOST + "/login"
+ADD_USER_URL = HOST +"/addUser"
+TEST = HOST + "/testing"
+CHECK_USER = HOST + "/check_login"
+ALT_LOGIN = HOST + "/alt_login"
+LOGOUT = HOST + "/logout"
+CHANGE_PASS = HOST + "/change_pswd"
+COMMAND = HOST + "/command"
+
+GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
+GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
+GlobalChangeUpdate = Value('i', 0) #0 is don't change, 1 is change
+
+class FileHandler():
+
+    def __init__(self, followDirectory):
+        self.directory = followDirectory
+        self.NameOfFile = 'CS3240FinalProject'
+
+    def remove_adjacentRepeats(self, list):
+        i = 1
+        while (i < len(list)):
+            if(list[i] == list[i-1]):
+                list.pop(i)
+                i -= 1
+            i += 1
+        return list
+
+    def autoOrganizeFile(self, changes):
+
+        #This works fine for everything except when new directories and files (or combination of both) are moved in. To work around this,
+        # I am going to add extra logic that ignores the "create" part of these new files copied in and instead declare a None in the first part
+        # of the move command. This will then have to be taken care of by the server...
+
+
+        DirectionListInOrder = []
+        if(changes[0:4] == 'File'):
+            if(changes[6:14] == 'modified'):
+                fileValue = changes.find(self.NameOfFile)
+                if (len(str.strip(changes[fileValue + len(self.NameOfFile):])) > 0):
+                    DirectionListInOrder.append('Transfer: ' + changes[fileValue + len(self.NameOfFile):])
+            elif(changes[6:13] == 'deleted'):
+                fileValue = changes.find(self.NameOfFile)
+                DirectionListInOrder.append('Delete: ' + changes[fileValue + len(self.NameOfFile):])
+            elif(changes[6:11] == 'moved'):
+                fileValueOne = changes.find(self.NameOfFile)
+                fileValueTwo = changes.find(self.NameOfFile, fileValueOne + len(self.NameOfFile))
+                fileValueComma = changes.find(',', fileValueOne + len(self.NameOfFile))
+                if (len(str.strip(changes[fileValueOne + len(self.NameOfFile):fileValueComma])) == 0):
+                    DirectionListInOrder.append('Move: ' + "None" + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+                else:
+                    DirectionListInOrder.append('Move: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+        else:
+            if(changes[11:18] == 'created'):
+                fileValue = changes.find(self.NameOfFile)
+                if (len(str.strip(changes[fileValue + len(self.NameOfFile):])) > 0):
+                    DirectionListInOrder.append('DirCreate: ' + changes[fileValue + len(self.NameOfFile):])
+            elif(changes[11:18] == 'deleted'):
+                fileValue = changes.find(self.NameOfFile)
+                DirectionListInOrder.append('DirDelete: ' + changes[fileValue + len(self.NameOfFile):])
+            elif(changes[11:16] == 'moved'):
+                fileValueOne = changes.find(self.NameOfFile)
+                fileValueTwo = changes.find(self.NameOfFile, fileValueOne + len(self.NameOfFile))
+                fileValueComma = changes.find(',', fileValueOne + len(self.NameOfFile))
+                if (len(str.strip(changes[fileValueOne + len(self.NameOfFile):fileValueComma])) == 0):
+                    DirectionListInOrder.append('DirMove: ' + "None" + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+                else:
+                    DirectionListInOrder.append('DirMove: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+
+        finalList = self.remove_adjacentRepeats(DirectionListInOrder)
+        for values in finalList:
+        	dic = {'Value': values}
+        	string = requests.post(COMMAND, headers=dic)
+        	print string.text
+        return finalList
+
+    def organizeFile(self):
+
+        #This works fine for everything except when new directories and files (or combination of both) are moved in. To work around this,
+        # I am going to add extra logic that ignores the "create" part of these new files copied in and instead declare a None in the first part
+        # of the move command. This will then have to be taken care of by the server...
+
+        lines = [line.strip() for line in open(self.directory)]
+        DirectionListInOrder = []
+        for changes in lines:
+            if(changes[0:4] == 'File'):
+                if(changes[6:13] == 'created' or changes[6:14] == 'modified'):
+                    fileValue = changes.find(self.NameOfFile)
+                    if (len(str.strip(changes[fileValue + len(self.NameOfFile):])) > 0):
+                        DirectionListInOrder.append('Transfer: ' + changes[fileValue + len(self.NameOfFile):])
+                elif(changes[6:13] == 'deleted'):
+                    fileValue = changes.find(self.NameOfFile)
+                    DirectionListInOrder.append('Delete: ' + changes[fileValue + len(self.NameOfFile):])
+                elif(changes[6:11] == 'moved'):
+                    fileValueOne = changes.find(self.NameOfFile)
+                    fileValueTwo = changes.find(self.NameOfFile, fileValueOne + len(self.NameOfFile))
+                    fileValueComma = changes.find(',', fileValueOne + len(self.NameOfFile))
+                    if (len(str.strip(changes[fileValueOne + len(self.NameOfFile):fileValueComma])) == 0):
+                        DirectionListInOrder.append('Move: ' + "None" + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+                    else:
+                        DirectionListInOrder.append('Move: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+            else:
+                if(changes[11:18] == 'created'):
+                    fileValue = changes.find(self.NameOfFile)
+                    if (len(str.strip(changes[fileValue + len(self.NameOfFile):])) > 0):
+                        DirectionListInOrder.append('DirCreate: ' + changes[fileValue + len(self.NameOfFile):])
+                elif(changes[11:18] == 'deleted'):
+                    fileValue = changes.find(self.NameOfFile)
+                    DirectionListInOrder.append('DirDelete: ' + changes[fileValue + len(self.NameOfFile):])
+                elif(changes[11:16] == 'moved'):
+                    fileValueOne = changes.find(self.NameOfFile)
+                    fileValueTwo = changes.find(self.NameOfFile, fileValueOne + len(self.NameOfFile))
+                    fileValueComma = changes.find(',', fileValueOne + len(self.NameOfFile))
+                    if (len(str.strip(changes[fileValueOne + len(self.NameOfFile):fileValueComma])) == 0):
+                        DirectionListInOrder.append('DirMove: ' + "None" + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+                    else:
+                        DirectionListInOrder.append('DirMove: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
+
+        finalList = self.remove_adjacentRepeats(DirectionListInOrder)
+        print "List \n"
+        for values in finalList:
+        	dic = {'Value': values}
+        	string = requests.post(COMMAND, headers=dic)
+        	print string.text
+        open("../DoNotDelete.txt", 'w').close()
+        return finalList
+
+
+class MyThread(threading.Thread):
+	def run(self):
+		while(True):
+			updateOrNot = raw_input("Type in anything and press enter to update: ")
+			if((len(updateOrNot) >= 0)):
+				HandlingFiles = FileHandler("../DoNotDelete.txt")
+				HandlingFiles.organizeFile()
+
+class MyHandler(FileSystemEventHandler):
+
+    currentEvent = ""
+    update = True
+
+    def on_modified(self, event):
+        super(MyHandler, self).on_modified(event)
+        what = 'Directory' if event.is_directory else 'File'
+        self.currentEvent = what + ", modified, " + event.src_path
+        if(self.update == False):
+            file = open("../DoNotDelete.txt", "a+")
+            file.write(self.currentEvent + "\n")
+            file.close()
+        else:
+            TheFileHandler = FileHandler("../DoNotDelete.txt")
+            TheFileHandler.autoOrganizeFile(self.currentEvent)
+
+    def on_created(self, event):
+        super(MyHandler, self).on_created(event)
+        what = 'Directory' if event.is_directory else 'File'
+        self.currentEvent = what + ", created, " + event.src_path
+        if(self.update == False):
+            file = open("../DoNotDelete.txt", "a+")
+            file.write(self.currentEvent + "\n")
+            file.close()
+        else:
+            TheFileHandler = FileHandler("../DoNotDelete.txt")
+            TheFileHandler.autoOrganizeFile(self.currentEvent)
+
+    def on_deleted(self, event):
+        super(MyHandler, self).on_deleted(event)
+        what = 'Directory' if event.is_directory else 'File'
+        self.currentEvent = what + ", deleted, " + event.src_path
+        if(self.update == False):
+            file = open("../DoNotDelete.txt", "a+")
+            file.write(self.currentEvent + "\n")
+            file.close()
+        else:
+            TheFileHandler = FileHandler("../DoNotDelete.txt")
+            TheFileHandler.autoOrganizeFile(self.currentEvent)
+
+    def on_moved(self, event):
+        super(MyHandler, self).on_moved(event)
+        what = 'Directory' if event.is_directory else 'File'
+        if(event.src_path is None): # Means that a file(s) has been moved into the OneDir Folder.
+            currentPath = os.path.dirname(os.path.realpath(__file__))
+            self.currentEvent = what + ", created, " + currentPath + "\n" + what + ", moved, from: " + currentPath + ", to: " + event.dest_path
+        else:
+            self.currentEvent = what + ", moved, from: " + event.src_path + ", to: " + event.dest_path
+        if(self.update == False):
+            file = open("../DoNotDelete.txt", "a+")
+            file.write(self.currentEvent + "\n")
+            file.close()
+        else:
+            TheFileHandler = FileHandler("../DoNotDelete.txt")
+            TheFileHandler.autoOrganizeFile(self.currentEvent)
+
+    def get_boolean(self, bool):
+        self.update = bool
+
+class MainPage():
+
+	def __init__(self, followDirectory):
+		self.directory = followDirectory
+		self.NameOfFile = 'GautamOneDir'
+
+	def CheckUser(self):
+		string = requests.post(CHECK_USER)
+		if(string.text == ""):
+			return False
+		return True
+
+	def LogInPartOne(self):
+		StringUserName = None
+		StringPassword = None
+		while(True):
+			userName = raw_input("UserName: ")
+			try:
+				StringUserName = str(userName)
+				break
+			except:
+				print "Not a valid UserName input."
+		while(True):
+			password = raw_input("Password: ")
+			try:
+				StringPassword = str(password)
+				break
+			except:
+				print "Not a valid password input."
+		userDict = {'UserName': StringUserName, 'Password': StringPassword}
+		string = requests.post(LOGIN_URL, headers=userDict)
+		returnBool = False;
+		if(str(string.text) == "Login Successful"):
+			returnBool = True;
+		return (string.text, returnBool);
+
+	def alternativeLogIn(self):
+		StringUserName = None
+		StringPassword = None
+		while(True):
+			print "One login session is already in session, so you must login with the same credentials."
+			userName = raw_input("UserName: ")
+			try:
+				StringUserName = str(userName)
+				break
+			except:
+				print "Not a valid UserName input."
+		while(True):
+			password = raw_input("Password: ")
+			try:
+				StringPassword = str(password)
+				break
+			except:
+				print "Not a valid password input."
+		userDict = {'UserName': StringUserName, 'Password': StringPassword}
+		string = requests.post(ALT_LOGIN, headers=userDict)
+		returnBool = False;
+		if(str(string.text) == "Login Successful"):
+			returnBool = True;
+		return (string.text, returnBool);
+
+	def AddNewUser(self):
+		StringUserName = None
+		StringPassword = None
+		while(True):
+			print "Adding a new User..."
+			userName = raw_input("New UserName: ")
+			try:
+				StringUserName = str(userName)
+				break
+			except:
+				print "Not a valid UserName input."
+		while(True):
+			password = raw_input("New Password: ")
+			try:
+				StringPassword = str(password)
+				break
+			except:
+				print "Not a valid password input."
+		userDict = {'UserName': StringUserName, 'Password': StringPassword}
+		string = requests.post(ADD_USER_URL, headers=userDict)
+		returnBool = False;
+		if(str(string.text) == "Username Added"):
+			returnBool = True;
+		return (string.text, returnBool)
+
+	def logout(self):
+		string = requests.post(LOGOUT)
+		return ("Logout", True)
+
+	def change_password(self):
+		userName = requests.post(CHECK_USER)
+		StringNew = None
+		StringOld = None
+		print "Okay, time to change your password..."
+		while(True):
+			oldPass = raw_input("Old Password: ")
+			try:
+				StringOld = str(oldPass)
+				break
+			except:
+				print "Not a valid input format."
+		while(True):
+			newPass = raw_input("New Password: ")
+			try:
+				StringNew = str(newPass)
+				break
+			except:
+				print "Not a valid input format."
+		userDict = {'UserName': userName.text, 'OldPass': StringOld, 'NewPass': StringNew}
+		string = requests.post(CHANGE_PASS, headers=userDict)
+		boolean = False
+		if(string.text == "Password Changed"):
+			return True
+		return (string.text, boolean)
+
+# The following two processes deal with the WatchDog commands being sent to the server.
+def runOneAuto():
+	event_handler = MyHandler()
+	event_handler.get_boolean(True)
+	observer = Observer()
+	observer.schedule(event_handler, path='.', recursive=True)
+	observer.start()
+	try:
+		while True:
+			time.sleep(1)
+	except KeyboardInterrupt:
+		observer.stop()
+	observer.join()
+
+########### HAVE TO FIGURE OUT HOW TO TRANSFER VARIABLES ACROSS PROCESSES SO THAT I CAN SWITCH BETWEEN THESE TWO...
+
+def runOneUser():
+	event_handler = MyHandler()
+	event_handler.get_boolean(False)
+	observer = Observer()
+	observer.schedule(event_handler, path='.', recursive=True)
+	observer.start()
+	try:
+		while True:
+			time.sleep(1)
+	except KeyboardInterrupt:
+		observer.stop()
+	observer.join()
+
+# This is a helper method that deals with user input for auto-updating.
+def runOneUserA():
+	global GlobalUpdateManagerNum
+	while(True):
+		if(GlobalUpdateManagerNum.value == 1):
+			HandlingFiles = FileHandler("../DoNotDelete.txt")
+			HandlingFiles.organizeFile()
+			GlobalUpdateManagerNum.value = 0
+
+def checkUpdateSettings(p1, p2, p3): #p1 is AutoUpdate process, p2, p3 is User Update Process
+	global GlobalAutoUpdate
+	global GlobalChangeUpdate
+	while(True):
+		if(GlobalChangeUpdate.value == 1):
+			if(GlobalAutoUpdate.value == 1):
+				p2.terminate()
+				p3.terminate()
+				p1.start()
+				p1.join()
+			else:
+				p1.terminate()
+				p2.start()
+				p3.start()
+				p2.join()
+				p3.join()
+			GlobalChangeUpdate.value == 0
+
+############# THEN I HAVE TO IMPLEMENT THAT HERE, WITH A VARIATION OF SHUTTING DOWN ONE PROCESS AND LAUNCHING ANOTHER, SO THAT I CAN SWITCH BETWEEN THE TWO
+# The following process deals with the user interface on the client side.
+def runTwo():
+	global GlobalUpdateManagerNum
+	global GlobalAutoUpdate
+	global GlobalChangeUpdate
+	AutoUpdate = True
+	run = MainPage("../DoNotDelete.txt")
+	while(True):
+		print "  (1) Type a 1 to add a new user."
+		print "  (2) Type a 2 to change your password."
+		print "  (3) Type a 3 to switch between Auto-Update being on or off."
+		print "  (4) Type a 4 to logout."
+		print " * If you are in User Update mode, simply input 'update' to perform a server update * "
+		while(True):
+			userInstruction = raw_input("Input: ")
+			try:
+				StringInput = str(userInstruction)
+				break
+			except:
+				print "Not a valid input format."
+		if(StringInput.strip() == "1"):
+			run.AddNewUser()
+		elif(StringInput.strip() == "2"):
+			run.change_password()
+		elif(StringInput.strip() == "3"):
+			if(AutoUpdate):
+				doWeUpdate = raw_input("Auto Update is currently on. Would you like to turn it off (y/n): ")
+				try:
+					if(str(doWeUpdate).strip().lower() == 'y'):
+						AutoUpdate = False
+						GlobalAutoUpdate.value = 0
+						GlobalChangeUpdate.value = 1
+				except:
+					print "Not a valid input form"
+			else:
+				doWeUpdate = raw_input("Auto Update is currently off. Would you like to turn it on (y/n): ")
+				try:
+					if(str(doWeUpdate).strip().lower() == 'y'):
+						AutoUpdate = True
+						GlobalAutoUpdate.value = 1
+						GlobalChangeUpdate.value = 1
+				except:
+					print "Not a valid input form"
+
+		elif(StringInput.strip() == "4"):
+			run.logout()
+			break
+		elif(StringInput.strip().lower() == "update"):
+			if(AutoUpdate):
+				GlobalUpdateManagerNum.value = 1
+				print GlobalUpdateManagerNum
+		else:
+			print "Not a valid input. Please try again, or input 4 to logout."
+
+		
 if __name__ == "__main__":
-    print "Testing..."
+	run = MainPage("../DoNotDelete.txt")
+	theBool = run.CheckUser()
+	print "Welcome to One Direction... the better version of DropBox."
+	while(True):
+		if(theBool == False):
+			string = run.LogInPartOne()
+		else:
+			string = run.alternativeLogIn()
+
+		if(string[1] == True):
+			break
+		else:
+			print "Invalid Login"
+	print "You are now logged in... Congratulations."
+	print "You now have a breadth of options..."
+
+	p1 = Process(target=runOneAuto)
+	p2 = Process(target=runOneUser)
+	p3 = Process(target=runOneUserA)
+	p4 = threading.Thread(target=runTwo)
+	p4.daemon = True
+	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
+
+	p1.start()
+	p4.start()
+	p5.start()
+
+	p1.join()
+	p4.join()
+	p5.join()

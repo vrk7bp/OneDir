@@ -508,7 +508,6 @@ def runTwo():
         else:
             print "Not a valid input. Please try again, or input 4 to logout."
 
-
 if __name__ == "__main__":
 	run = MainPage("../DoNotDelete.txt")
 	theBool = run.CheckUser()

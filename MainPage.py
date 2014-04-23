@@ -21,6 +21,9 @@ LOGOUT = HOST + "/logout"
 CHANGE_PASS = HOST + "/change_pswd"
 COMMAND = HOST + "/command"
 
+ADMIN_CHANGE_PASS = HOST + "/admin_change_pswd"
+ADMIN_DELETE_USER = HOST + "/admin_delete_user"
+
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
 GlobalChangeUpdate = Value('i', 0) #0 is don't change, 1 is change
@@ -139,7 +142,6 @@ class FileHandler():
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 
-
 class MyThread(threading.Thread):
 	def run(self):
 		while(True):
@@ -210,133 +212,199 @@ class MyHandler(FileSystemEventHandler):
 
 class MainPage():
 
-	def __init__(self, followDirectory):
-		self.directory = followDirectory
-		self.NameOfFile = 'GautamOneDir'
+    def __init__(self, followDirectory):
+        self.directory = followDirectory
+        self.NameOfFile = 'GautamOneDir'
 
-	def CheckUser(self):
-		string = requests.post(CHECK_USER)
-		if(string.text == ""):
-			return False
-		return True
+    def CheckUser(self):
+        string = requests.post(CHECK_USER)
+        if(string.text == ""):
+            return False
+        return True
 
-	def LogInPartOne(self):
-		StringUserName = None
-		StringPassword = None
-		while(True):
-			userName = raw_input("UserName: ")
-			try:
-				StringUserName = str(userName)
-				break
-			except:
-				print "Not a valid UserName input."
-		while(True):
-			password = raw_input("Password: ")
-			try:
-				StringPassword = str(password)
-				break
-			except:
-				print "Not a valid password input."
-		userDict = {'UserName': StringUserName, 'Password': StringPassword}
-		string = requests.post(LOGIN_URL, headers=userDict)
-		returnBool = False;
-		if(str(string.text) == "Login Successful"):
-			returnBool = True;
-		return (string.text, returnBool);
+    def LogInPartOne(self):
+        StringUserName = None
+        StringPassword = None
+        while(True):
+            userName = raw_input("UserName: ")
+            try:
+                StringUserName = str(userName)
+                break
+            except:
+                print "Not a valid UserName input."
+        while(True):
+            password = raw_input("Password: ")
+            try:
+                StringPassword = str(password)
+                break
+            except:
+                print "Not a valid password input."
+        userDict = {'UserName': StringUserName, 'Password': StringPassword}
+        string = requests.post(LOGIN_URL, headers=userDict)
+        returnBool = False;
+        if(str(string.text) == "Login Successful"):
+            returnBool = True;
+        return (string.text, returnBool);
 
-	def alternativeLogIn(self):
-		StringUserName = None
-		StringPassword = None
-		while(True):
-			print "One login session is already in session, so you must login with the same credentials."
-			userName = raw_input("UserName: ")
-			try:
-				StringUserName = str(userName)
-				break
-			except:
-				print "Not a valid UserName input."
-		while(True):
-			password = raw_input("Password: ")
-			try:
-				StringPassword = str(password)
-				break
-			except:
-				print "Not a valid password input."
-		userDict = {'UserName': StringUserName, 'Password': StringPassword}
-		string = requests.post(ALT_LOGIN, headers=userDict)
-		returnBool = False;
-		if(str(string.text) == "Login Successful"):
-			returnBool = True;
-		return (string.text, returnBool);
+    def alternativeLogIn(self):
+        StringUserName = None
+        StringPassword = None
+        while(True):
+            print "One login session is already in session, so you must login with the same credentials."
+            userName = raw_input("UserName: ")
+            try:
+                StringUserName = str(userName)
+                break
+            except:
+                print "Not a valid UserName input."
+        while(True):
+            password = raw_input("Password: ")
+            try:
+                StringPassword = str(password)
+                break
+            except:
+                print "Not a valid password input."
+        userDict = {'UserName': StringUserName, 'Password': StringPassword}
+        string = requests.post(ALT_LOGIN, headers=userDict)
+        returnBool = False;
+        if(str(string.text) == "Login Successful"):
+            returnBool = True;
+        return (string.text, returnBool);
 
-	def AddNewUser(self):
-		StringUserName = None
-		StringPassword = None
-		while(True):
-			print "Adding a new User..."
-			userName = raw_input("New UserName: ")
-			try:
-				StringUserName = str(userName)
-				break
-			except:
-				print "Not a valid UserName input."
-		while(True):
-			password = raw_input("New Password: ")
-			try:
-				StringPassword = str(password)
-				break
-			except:
-				print "Not a valid password input."
-		userDict = {'UserName': StringUserName, 'Password': StringPassword}
-		string = requests.post(ADD_USER_URL, headers=userDict)
-		returnBool = False;
-		if(str(string.text) == "Username Added"):
-			returnBool = True;
-		return (string.text, returnBool)
+    def AddNewUser(self):
+        StringUserName = None
+        StringPassword = None
+        while(True):
+            print "Adding a new User..."
+            userName = raw_input("New UserName: ")
+            try:
+                StringUserName = str(userName)
+                break
+            except:
+                print "Not a valid UserName input."
+        while(True):
+            password = raw_input("New Password: ")
+            try:
+                StringPassword = str(password)
+                break
+            except:
+                print "Not a valid password input."
+        userDict = {'UserName': StringUserName, 'Password': StringPassword}
+        string = requests.post(ADD_USER_URL, headers=userDict)
+        returnBool = False;
+        if(str(string.text) == "Username Added"):
+            returnBool = True;
+        return (string.text, returnBool)
 
-	def logout(self):
-		string = requests.post(LOGOUT)
-		return ("Logout", True)
+    def logout(self):
+        string = requests.post(LOGOUT)
+        return ("Logout", True)
 
-	def change_password(self):
-		userName = requests.post(CHECK_USER)
-		StringNew = None
-		StringOld = None
-		print "Okay, time to change your password..."
-		while(True):
-			oldPass = raw_input("Old Password: ")
-			try:
-				StringOld = str(oldPass)
-				break
-			except:
-				print "Not a valid input format."
-		while(True):
-			newPass = raw_input("New Password: ")
-			try:
-				StringNew = str(newPass)
-				break
-			except:
-				print "Not a valid input format."
-		userDict = {'UserName': userName.text, 'OldPass': StringOld, 'NewPass': StringNew}
-		string = requests.post(CHANGE_PASS, headers=userDict)
-		boolean = False
-		if(string.text == "Password Changed"):
-			return True
-		return (string.text, boolean)
+    def change_password(self):
+        userName = requests.post(CHECK_USER)
+        StringNew = None
+        StringOld = None
+        print "Okay, time to change your password..."
+        while(True):
+            oldPass = raw_input("Old Password: ")
+            try:
+                StringOld = str(oldPass)
+                break
+            except:
+                print "Not a valid input format."
+        while(True):
+            newPass = raw_input("New Password: ")
+            try:
+                StringNew = str(newPass)
+                break
+            except:
+                print "Not a valid input format."
+        userDict = {'UserName': userName.text, 'OldPass': StringOld, 'NewPass': StringNew}
+        string = requests.post(CHANGE_PASS, headers=userDict)
+        boolean = False
+        if(string.text == "Password Changed"):
+            return True
+        return (string.text, boolean)
+
+    def change_another_user_password(self):
+        userName = requests.post(CHECK_USER)
+        if 'Admin/' in userName.text:
+            print "Admin Confirmed."
+            print "Okay, time to change another user's password..."
+
+            while(True):
+                adminPass = raw_input("Admin Password: ")
+                try:
+                    adminPW = str(adminPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            while(True):
+                userNameToChange = raw_input("Username to Change: ")
+                try:
+                    userID = str(userNameToChange)
+                    break
+                except:
+                    print "Not a valid input format."
+            while(True):
+                newPass = raw_input("New Password: ")
+                try:
+                    userPW = str(newPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID, 'NewPass': userPW}
+            string = requests.post(ADMIN_CHANGE_PASS, headers=userDict)
+            boolean = False
+            if(string.text == "Password Changed"):
+                return True
+            return (string.text, boolean)
+        else:
+            print "This is an Admin-Only command!"
+
+    def delete_user(self):
+        userName = requests.post(CHECK_USER)
+        if 'Admin/' in userName.text:
+            print "Admin Confirmed."
+            print "Okay, time to delete another user..."
+
+            while(True):
+                adminPass = raw_input("Admin Password: ")
+                try:
+                    adminPW = str(adminPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            while(True):
+                userNameToChange = raw_input("Username to Change: ")
+                try:
+                    userID = str(userNameToChange)
+                    break
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
+            string = requests.post(ADMIN_DELETE_USER, headers=userDict)
+            boolean = False
+            if(string.text == "User <" + userID + "> Deleted"):
+                return True
+            return (string.text, boolean)
+        else:
+            print "This is an Admin-Only command!"
+
 
 # The following two processes deal with the WatchDog commands being sent to the server.
 def runOneAuto():
-	event_handler = MyHandler()
-	event_handler.get_boolean(True)
-	observer = Observer()
-	observer.schedule(event_handler, path='.', recursive=True)
-	observer.start()
-	try:
-		while True:
-			time.sleep(1)
-	except KeyboardInterrupt:
-		observer.stop()
-	observer.join()
+    event_handler = MyHandler()
+    event_handler.get_boolean(True)
+    observer = Observer()
+    observer.schedule(event_handler, path='.', recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
 ########### HAVE TO FIGURE OUT HOW TO TRANSFER VARIABLES ACROSS PROCESSES SO THAT I CAN SWITCH BETWEEN THESE TWO...
 
@@ -383,59 +451,64 @@ def checkUpdateSettings(p1, p2, p3): #p1 is AutoUpdate process, p2, p3 is User U
 ############# THEN I HAVE TO IMPLEMENT THAT HERE, WITH A VARIATION OF SHUTTING DOWN ONE PROCESS AND LAUNCHING ANOTHER, SO THAT I CAN SWITCH BETWEEN THE TWO
 # The following process deals with the user interface on the client side.
 def runTwo():
-	global GlobalUpdateManagerNum
-	global GlobalAutoUpdate
-	global GlobalChangeUpdate
-	AutoUpdate = True
-	run = MainPage("../DoNotDelete.txt")
-	while(True):
-		print "  (1) Type a 1 to add a new user."
-		print "  (2) Type a 2 to change your password."
-		print "  (3) Type a 3 to switch between Auto-Update being on or off."
-		print "  (4) Type a 4 to logout."
-		print " * If you are in User Update mode, simply input 'update' to perform a server update * "
-		while(True):
-			userInstruction = raw_input("Input: ")
-			try:
-				StringInput = str(userInstruction)
-				break
-			except:
-				print "Not a valid input format."
-		if(StringInput.strip() == "1"):
-			run.AddNewUser()
-		elif(StringInput.strip() == "2"):
-			run.change_password()
-		elif(StringInput.strip() == "3"):
-			if(AutoUpdate):
-				doWeUpdate = raw_input("Auto Update is currently on. Would you like to turn it off (y/n): ")
-				try:
-					if(str(doWeUpdate).strip().lower() == 'y'):
-						AutoUpdate = False
-						GlobalAutoUpdate.value = 0
-						GlobalChangeUpdate.value = 1
-				except:
-					print "Not a valid input form"
-			else:
-				doWeUpdate = raw_input("Auto Update is currently off. Would you like to turn it on (y/n): ")
-				try:
-					if(str(doWeUpdate).strip().lower() == 'y'):
-						AutoUpdate = True
-						GlobalAutoUpdate.value = 1
-						GlobalChangeUpdate.value = 1
-				except:
-					print "Not a valid input form"
+    global GlobalUpdateManagerNum
+    global GlobalAutoUpdate
+    global GlobalChangeUpdate
+    AutoUpdate = True
+    run = MainPage("../DoNotDelete.txt")
+    while (True):
+        print "  (1) Type a 1 to add a new user."
+        print "  (2) Type a 2 to change your password."
+        print "  (3) Type a 3 to switch between Auto-Update being on or off."
+        print "  (4) Type a 4 to logout."
+        print "  (5) **Admin-Only** Type a 5 to change another user's password."
+        print "  (6) **Admin-Only** Type a 6 to delete another user."
+        print " * If you are in User Update mode, simply input 'update' to perform a server update * "
+        while (True):
+            userInstruction = raw_input("Input: ")
+            try:
+                StringInput = str(userInstruction)
+                break
+            except:
+                print "Not a valid input format."
+        if (StringInput.strip() == "1"):
+            run.AddNewUser()
+        elif (StringInput.strip() == "2"):
+            run.change_password()
+        elif (StringInput.strip() == "3"):
+            if (AutoUpdate):
+                doWeUpdate = raw_input("Auto Update is currently on. Would you like to turn it off (y/n): ")
+                try:
+                    if (str(doWeUpdate).strip().lower() == 'y'):
+                        AutoUpdate = False
+                    GlobalAutoUpdate.value = 0
+                    GlobalChangeUpdate.value = 1
+                except:
+                    print "Not a valid input form"
+            else:
+                doWeUpdate = raw_input("Auto Update is currently off. Would you like to turn it on (y/n): ")
+                try:
+                    if (str(doWeUpdate).strip().lower() == 'y'):
+                        AutoUpdate = True
+                        GlobalAutoUpdate.value = 1
+                        GlobalChangeUpdate.value = 1
+                except:
+                    print "Not a valid input form"
+        elif (StringInput.strip() == "4"):
+            run.logout()
+            break
+        elif (StringInput.strip() == "5"):
+            run.change_another_user_password()
+        elif (StringInput.strip() == "6"):
+            run.delete_user()
+        elif (StringInput.strip().lower() == "update"):
+            if (AutoUpdate):
+                GlobalUpdateManagerNum.value = 1
+                print GlobalUpdateManagerNum
+        else:
+            print "Not a valid input. Please try again, or input 4 to logout."
 
-		elif(StringInput.strip() == "4"):
-			run.logout()
-			break
-		elif(StringInput.strip().lower() == "update"):
-			if(AutoUpdate):
-				GlobalUpdateManagerNum.value = 1
-				print GlobalUpdateManagerNum
-		else:
-			print "Not a valid input. Please try again, or input 4 to logout."
 
-		
 if __name__ == "__main__":
 	run = MainPage("../DoNotDelete.txt")
 	theBool = run.CheckUser()

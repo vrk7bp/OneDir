@@ -11,13 +11,21 @@ import requests
 import fileinput
 import json
 import sqlite3
+from werkzeug.utils import secure_filename
 
 dbName = "testUserDB"
 tableName = "users"
 
 DATABASE = 'testUserDB'
 
+UPLOAD_FOLDER = '/home/student/CS3240FinalProject/TestFolder'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 ##### WORKS ####
 def connect_db():
@@ -247,8 +255,51 @@ def handle_admin_change_pass_cmd():
     else:
         return "Error in the Program with changing password..."
 
+@app.route("/admin_add_user", methods = ['GET', 'POST'])
+def handle_admin_add_user_cmd():
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+	userPW = request.headers['NewPass']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			iden = check_login_id()
+			new_id = userID
+			new_pass = userPW
+
+			users = access_user_table()
+
+			if new_id in users:
+				return "Username already in use!"
+			else:
+				if ("Admin" not in iden):
+					if "Admin" in new_id:
+						return "Not Allowed"
+					else:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						return "Username Added"
+				else:
+					cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+					g.db.commit()
+					return "Username Added"
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with adding a new user.."
+	else:
+		return "Error in the Program with adding a new user..."
+
 @app.route("/admin_delete_user", methods = ['GET', 'POST'])
-def handle_admin_change_pass_cmd():
+def handle_admin_delete_user_cmd():
     users = access_user_table()
     adminID = request.headers['AdminID']
     adminPW = request.headers['AdminPW']
@@ -306,6 +357,18 @@ def handle_logout():
 def handle_command():
 	command = request.headers['Value']
 	return "This is the command recieved: " + command
+
+#### Dealing with File Transfer Here ####
+
+@app.route('/file_transfer', methods=['GET', 'POST'])
+def upload_file():
+	file = request.files['file']
+	command = request.headers['command']
+	if file and allowed_file(file.filename):
+		filename = secure_filename(file.filename)
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		return  "File uploaded correctly" #redirect(url_for('uploaded_file', filename=filename))
+	return command
 
 
 if __name__ == "__main__":

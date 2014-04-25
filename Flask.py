@@ -70,25 +70,6 @@ def handle_add_user_cmd():
             g.db.commit()
             return "Username Added"
 
-# #Works...
-# @app.route('/addAdminUser', methods = ['GET', 'POST'])
-# def handle_add_admin_user_cmd():
-#     adminUsers = access_adminUser_table()
-#     iden = check_login_id()
-#
-#     if iden not in adminUsers:
-#         return "Not Allowed to Access Admin Commands"
-#     else:
-#         new_id = request.headers['UserName']
-#         new_pass = request.headers['Password']
-#
-#         if new_id in adminUsers:
-#             return "Username already in use!"
-#         else:
-#             cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-#             g.db.commit()
-#             return "Username Added"
-
 #Works...
 def access_user_table():
     try:
@@ -101,19 +82,6 @@ def access_user_table():
 
     except:
         return []
-
-# #Works...
-# def access_adminUser_table():
-#     try:
-#     	users = []
-#         cur = g.db.execute("select adminUserName from " + tableName)
-#         rows = cur.fetchall()
-#         for row in rows:
-#             users.append(row[0]) #row[0] because the return type is a tuple
-#         return users
-#
-#     except:
-#         return []
 
 #Works...
 @app.route("/check_login", methods = ['GET', 'POST'])

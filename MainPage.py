@@ -521,6 +521,7 @@ def runTwo():
     global GlobalUpdateManagerNum
     global GlobalAutoUpdate
     global GlobalChangeUpdate
+    TheFileHandler = FileHandler("../DoNotDelete.txt")
     AutoUpdate = True
     run = MainPage("../DoNotDelete.txt")
     while (True):
@@ -549,8 +550,8 @@ def runTwo():
                 try:
                     if (str(doWeUpdate).strip().lower() == 'y'):
                         AutoUpdate = False
-                    GlobalAutoUpdate.value = 0
-                    GlobalChangeUpdate.value = 1
+                        GlobalAutoUpdate.value = 0
+                        GlobalChangeUpdate.value = 1
                 except:
                     print "Not a valid input form"
             else:
@@ -569,9 +570,10 @@ def runTwo():
         elif (StringInput.strip() == "6"):
             run.delete_user()
         elif (StringInput.strip().lower() == "update"):
-            if (AutoUpdate):
-                GlobalUpdateManagerNum.value = 1
-                print GlobalUpdateManagerNum
+            TheFileHandler.organizeFile()
+            # if (AutoUpdate):
+            #     GlobalUpdateManagerNum.value = 1
+            #     print GlobalUpdateManagerNum
         elif(StringInput.strip().lower() == "test"):
             userDict = {'command': "This is the command..."}
             test = {'file': open('test.txt', 'rb')}

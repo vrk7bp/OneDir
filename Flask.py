@@ -272,12 +272,17 @@ def handle_admin_add_user_cmd():
 						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
 						return "Username Added"
 				else:
-					cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-					g.db.commit()
-					os.makedirs(USER_FOLDER + "/" + new_id)
-					os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
-					os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
-					return "Username Added"
+					if "Admin" in new_id:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						return "Username Added"
+					else:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						return "Username Added"
 		else:
 			return "Wrong Admin Password"
 	elif check_login_status():

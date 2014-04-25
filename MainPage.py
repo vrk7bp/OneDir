@@ -415,6 +415,7 @@ class MainPage():
 
     def delete_user(self):
         userName = requests.post(CHECK_USER)
+        filesToo = "False"
         if 'Admin/' in userName.text:
             print "Admin Confirmed."
             print "Okay, time to delete another user..."
@@ -433,9 +434,24 @@ class MainPage():
                     break
                 except:
                     print "Not a valid input format."
-            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
+            while(True):
+                deleteFilesToo = raw_input("Should we delete the files as well (y/n): ")
+                try:
+                    filesTooString = str(deleteFilesToo)
+                    if(filesTooString == 'n'):
+                        break
+                    if(filesTooString == 'y'):
+                        filesToo = "True"
+                        break
+                    else:
+                        print "Not a valid y or n."
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID, 'FilesToo': filesToo}
+            #userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
             string = requests.post(ADMIN_DELETE_USER, headers=userDict)
             boolean = False
+            print string.text
             if(string.text == "User <" + userID + "> Deleted"):
                 return True
             return (string.text, boolean)

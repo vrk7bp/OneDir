@@ -11,6 +11,7 @@ import requests
 import fileinput
 import json
 import sqlite3
+import shutil
 from werkzeug.utils import secure_filename
 
 dbName = "testUserDB"
@@ -19,10 +20,16 @@ tableName = "users"
 DATABASE = 'testUserDB'
 
 UPLOAD_FOLDER = '/home/student/CS3240FinalProject/TestFolder'
+USER_FOLDER = '/home/student/CS3240FinalProject/Users'
+LOGS_FOLDER = '/home/student/CS3240FinalProject/Logs'
+ACTIVITY_FOLDER = '/home/student/CS3240FinalProject/Activity'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['USER_FOLDER'] = USER_FOLDER
+app.config['LOGS_FOLDER'] = LOGS_FOLDER
+app.config['ACTIVITY_FOLDER'] = ACTIVITY_FOLDER
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -64,10 +71,16 @@ def handle_add_user_cmd():
             else:
 		        cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
 		        g.db.commit()
+		        os.makedirs(USER_FOLDER + "/" + new_id)
+		        os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+		        os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
 		        return "Username Added"
         else:
             cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
             g.db.commit()
+            os.makedirs(USER_FOLDER + "/" + new_id)
+            os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+            os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
             return "Username Added"
 
 #Works...
@@ -254,10 +267,16 @@ def handle_admin_add_user_cmd():
 					else:
 						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
 						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
 						return "Username Added"
 				else:
 					cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
 					g.db.commit()
+					os.makedirs(USER_FOLDER + "/" + new_id)
+					os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+					os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
 					return "Username Added"
 		else:
 			return "Wrong Admin Password"
@@ -272,6 +291,7 @@ def handle_admin_delete_user_cmd():
     adminID = request.headers['AdminID']
     adminPW = request.headers['AdminPW']
     userID = request.headers['UserName']
+    filesToo = request.headers['FilesToo']
 
     if adminID in users:
         rightPassword = False
@@ -283,6 +303,10 @@ def handle_admin_delete_user_cmd():
         if rightPassword:
             cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
             g.db.commit()
+            if(filesToo == "True"):
+            	shutil.rmtree(USER_FOLDER + "/" + userID)
+            	os.remove(LOGS_FOLDER + "/" + userID)
+            	os.remove(ACTIVITY_FOLDER + "/" + userID)
             return "User <" + userID + "> Deleted"
         else:
             return "Wrong Admin Password"

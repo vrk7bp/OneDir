@@ -14,6 +14,7 @@ import sqlite3
 
 dbName = "testUserDB"
 tableName = "users"
+tableNameDU = "deleted_users"
 
 DATABASE = 'testUserDB'
 
@@ -62,25 +63,6 @@ def handle_add_user_cmd():
             g.db.commit()
             return "Username Added"
 
-# #Works...
-# @app.route('/addAdminUser', methods = ['GET', 'POST'])
-# def handle_add_admin_user_cmd():
-#     adminUsers = access_adminUser_table()
-#     iden = check_login_id()
-#
-#     if iden not in adminUsers:
-#         return "Not Allowed to Access Admin Commands"
-#     else:
-#         new_id = request.headers['UserName']
-#         new_pass = request.headers['Password']
-#
-#         if new_id in adminUsers:
-#             return "Username already in use!"
-#         else:
-#             cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-#             g.db.commit()
-#             return "Username Added"
-
 #Works...
 def access_user_table():
     try:
@@ -94,18 +76,18 @@ def access_user_table():
     except:
         return []
 
-# #Works...
-# def access_adminUser_table():
-#     try:
-#     	users = []
-#         cur = g.db.execute("select adminUserName from " + tableName)
-#         rows = cur.fetchall()
-#         for row in rows:
-#             users.append(row[0]) #row[0] because the return type is a tuple
-#         return users
-#
-#     except:
-#         return []
+#Works...
+def access_deleted_user_table():
+    try:
+    	users = []
+        cur = g.db.execute("select user from " + tableNameDU)
+        rows = cur.fetchall()
+        for row in rows:
+            users.append(row[0]) #row[0] because the return type is a tuple
+        return users
+
+    except:
+        return []
 
 #Works...
 @app.route("/check_login", methods = ['GET', 'POST'])
@@ -254,6 +236,8 @@ def handle_admin_change_pass_cmd():
     adminPW = request.headers['AdminPW']
     userID = request.headers['UserName']
 
+    deletedUsers = access_deleted_user_table()
+
     if adminID in users:
         rightPassword = False
         cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
@@ -264,6 +248,11 @@ def handle_admin_change_pass_cmd():
         if rightPassword:
             cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
             g.db.commit()
+            cur = g.db.execute("CREATE TABLE IF NOT EXISTS deleted_users(user text)")
+            g.db.commit()
+            if userID not in deletedUsers:
+                cur = g.db.execute("INSERT INTO deleted_users(user) VALUES (?)", [userID])
+            g.db.commit()
             return "User <" + userID + "> Deleted"
         else:
             return "Wrong Admin Password"
@@ -271,7 +260,6 @@ def handle_admin_change_pass_cmd():
         return "Error in the Program with changing password..."
     else:
         return "Error in the Program with changing password..."
-
 
 @app.route("/alt_login", methods = ['GET', 'POST'])
 def handle_alt_login():

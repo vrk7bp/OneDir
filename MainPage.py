@@ -12,6 +12,8 @@ import sqlite3
 
 HOST = "http://127.0.0.1:5000"
 
+#HOST = "http://ec2-54-86-100-75.compute-1.amazonaws.com:5000"
+
 LOGIN_URL = HOST + "/login"
 ADD_USER_URL = HOST +"/addUser"
 TEST = HOST + "/testing"
@@ -21,8 +23,18 @@ LOGOUT = HOST + "/logout"
 CHANGE_PASS = HOST + "/change_pswd"
 COMMAND = HOST + "/command"
 
+## Shouldn't ever have to really use these...
+FILE_TRANSFER = HOST + "/file_transfer"
+CREATE_DIREC = HOST + "/create_direc"
+DELETE_DIREC = HOST + "/delete_direc"
+MOVE_DIREC = HOST + "/move_direc"
+DELETE_FILE = HOST + "/delete_file"
+MOVE_FILE = HOST + "/move_file"
+## End
+
 ADMIN_CHANGE_PASS = HOST + "/admin_change_pswd"
 ADMIN_DELETE_USER = HOST + "/admin_delete_user"
+ADMIN_ADD_USER = HOST + "/admin_add_user"
 
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
@@ -88,7 +100,7 @@ class FileHandler():
         for values in finalList:
         	dic = {'Value': values}
         	string = requests.post(COMMAND, headers=dic)
-        	print string.text
+        	#print string.text
         return finalList
 
     def organizeFile(self):
@@ -134,11 +146,10 @@ class FileHandler():
                         DirectionListInOrder.append('DirMove: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
 
         finalList = self.remove_adjacentRepeats(DirectionListInOrder)
-        print "List \n"
         for values in finalList:
         	dic = {'Value': values}
         	string = requests.post(COMMAND, headers=dic)
-        	print string.text
+        	#print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 
@@ -225,6 +236,7 @@ class MainPage():
     def LogInPartOne(self):
         StringUserName = None
         StringPassword = None
+        print("If this is your first time running OneDir and you want to make an account, simply type in 'new' for both the UserName and Password...")
         while(True):
             userName = raw_input("UserName: ")
             try:
@@ -240,11 +252,20 @@ class MainPage():
             except:
                 print "Not a valid password input."
         userDict = {'UserName': StringUserName, 'Password': StringPassword}
-        string = requests.post(LOGIN_URL, headers=userDict)
-        returnBool = False;
-        if(str(string.text) == "Login Successful"):
-            returnBool = True;
-        return (string.text, returnBool);
+        boolValue = True
+        if(StringUserName == 'new' and StringPassword == 'new'):
+            temp = self.AddNewUser()
+            if(temp[0] == "Username already in use!"):
+                boolValue = False
+            userDict = {'UserName': temp[2], 'Password': temp[3]}
+        if(boolValue == True):
+            string = requests.post(LOGIN_URL, headers=userDict)
+            returnBool = False;
+            if(str(string.text) == "Login Successful"):
+                returnBool = True;
+            return (string.text, returnBool);
+        else:
+            return ("Username already in use!", False)
 
     def alternativeLogIn(self):
         StringUserName = None
@@ -294,7 +315,44 @@ class MainPage():
         returnBool = False;
         if(str(string.text) == "Username Added"):
             returnBool = True;
-        return (string.text, returnBool)
+        return (string.text, returnBool, StringUserName, StringPassword)
+
+    def AddNewUserAdmin(self):
+        userName = requests.post(CHECK_USER)
+        if 'Admin/' in userName.text:
+            print "Admin Confirmed."
+            print "Okay, time to add a new user..."
+            print "If you want this user to be an admin, simply add "
+
+            while(True):
+                adminPass = raw_input("Admin Password: ")
+                try:
+                    adminPW = str(adminPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            while(True):
+                userNameToChange = raw_input("Username to Add: ")
+                try:
+                    userID = str(userNameToChange)
+                    break
+                except:
+                    print "Not a valid input format."
+            while(True):
+                newPass = raw_input("Password of new User: ")
+                try:
+                    userPW = str(newPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID, 'NewPass': userPW}
+            string = requests.post(ADMIN_ADD_USER, headers=userDict)
+            boolean = False
+            if(string.text == "Username Added"):
+                return True
+            return (string.text, boolean)
+        else:
+            print "This is an Admin-Only command!"
 
     def logout(self):
         string = requests.post(LOGOUT)
@@ -364,6 +422,7 @@ class MainPage():
 
     def delete_user(self):
         userName = requests.post(CHECK_USER)
+        filesToo = "False"
         if 'Admin/' in userName.text:
             print "Admin Confirmed."
             print "Okay, time to delete another user..."
@@ -376,15 +435,30 @@ class MainPage():
                 except:
                     print "Not a valid input format."
             while(True):
-                userNameToChange = raw_input("Username to Change: ")
+                userNameToChange = raw_input("Username to Delete: ")
                 try:
                     userID = str(userNameToChange)
                     break
                 except:
                     print "Not a valid input format."
-            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
+            while(True):
+                deleteFilesToo = raw_input("Should we delete the files as well (y/n): ")
+                try:
+                    filesTooString = str(deleteFilesToo)
+                    if(filesTooString == 'n'):
+                        break
+                    if(filesTooString == 'y'):
+                        filesToo = "True"
+                        break
+                    else:
+                        print "Not a valid y or n."
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID, 'FilesToo': filesToo}
+            #userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
             string = requests.post(ADMIN_DELETE_USER, headers=userDict)
             boolean = False
+            print string.text
             if(string.text == "User <" + userID + "> Deleted"):
                 return True
             return (string.text, boolean)
@@ -454,13 +528,14 @@ def runTwo():
     global GlobalUpdateManagerNum
     global GlobalAutoUpdate
     global GlobalChangeUpdate
+    TheFileHandler = FileHandler("../DoNotDelete.txt")
     AutoUpdate = True
     run = MainPage("../DoNotDelete.txt")
     while (True):
-        print "  (1) Type a 1 to add a new user."
+        print "  (1) Type a 1 to logout."
         print "  (2) Type a 2 to change your password."
         print "  (3) Type a 3 to switch between Auto-Update being on or off."
-        print "  (4) Type a 4 to logout."
+        print "  (4) **Admin-Only** Type a 4 to add a new user."
         print "  (5) **Admin-Only** Type a 5 to change another user's password."
         print "  (6) **Admin-Only** Type a 6 to delete another user."
         print " * If you are in User Update mode, simply input 'update' to perform a server update * "
@@ -472,7 +547,15 @@ def runTwo():
             except:
                 print "Not a valid input format."
         if (StringInput.strip() == "1"):
-            run.AddNewUser()
+            run.logout()
+            print ""
+            print ""
+            print "Thanks for using OneDir..."
+            print ""
+            print ""
+            time.sleep(2)
+            print "Please press Ctrl-C to exit completely."
+            break
         elif (StringInput.strip() == "2"):
             run.change_password()
         elif (StringInput.strip() == "3"):
@@ -481,8 +564,8 @@ def runTwo():
                 try:
                     if (str(doWeUpdate).strip().lower() == 'y'):
                         AutoUpdate = False
-                    GlobalAutoUpdate.value = 0
-                    GlobalChangeUpdate.value = 1
+                        GlobalAutoUpdate.value = 0
+                        GlobalChangeUpdate.value = 1
                 except:
                     print "Not a valid input form"
             else:
@@ -495,18 +578,19 @@ def runTwo():
                 except:
                     print "Not a valid input form"
         elif (StringInput.strip() == "4"):
-            run.logout()
-            break
+            run.AddNewUserAdmin()
         elif (StringInput.strip() == "5"):
             run.change_another_user_password()
         elif (StringInput.strip() == "6"):
             run.delete_user()
         elif (StringInput.strip().lower() == "update"):
-            if (AutoUpdate):
-                GlobalUpdateManagerNum.value = 1
-                print GlobalUpdateManagerNum
+            TheFileHandler.organizeFile()
+        elif(StringInput.strip().lower() == "test"):
+            userDict = {'command': "This is the command..."}
+            test = {'file': open('test.txt', 'rb')}
+            requests.post(FILE_TRANSFER, files=test, headers=userDict)
         else:
-            print "Not a valid input. Please try again, or input 4 to logout."
+            print "Not a valid input. Please try again, or input 1 to logout."
 
 if __name__ == "__main__":
 	run = MainPage("../DoNotDelete.txt")
@@ -520,8 +604,11 @@ if __name__ == "__main__":
 
 		if(string[1] == True):
 			break
-		else:
-			print "Invalid Login"
+        else:
+            if(string[0] == "Username already in use!"):
+                print "Username already in use!"
+            else:
+                print "Invalid Login"
 	print "You are now logged in... Congratulations."
 	print "You now have a breadth of options..."
 
@@ -532,10 +619,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p1.start()
+	p2.start()
 	p4.start()
 	p5.start()
 
-	p1.join()
+	p2.join()
 	p4.join()
 	p5.join()

@@ -1,6 +1,4 @@
-from flask import Flask
-from flask import request
-from flask import g
+from flask import request, redirect, Flask, g, url_for
 import sys
 import time
 import os
@@ -11,6 +9,9 @@ import requests
 import fileinput
 import json
 import sqlite3
+import shutil
+from werkzeug.utils import secure_filename
+import datetime
 
 dbName = "testUserDB"
 tableNameU = "users"
@@ -18,7 +19,20 @@ tableNameDU = "deleted_users"
 
 DATABASE = 'testUserDB'
 
+UPLOAD_FOLDER = '/home/student/CS3240FinalProject/TestFolder'
+USER_FOLDER = '/home/student/CS3240FinalProject/Users'
+LOGS_FOLDER = '/home/student/CS3240FinalProject/Logs'
+ACTIVITY_FOLDER = '/home/student/CS3240FinalProject/Statistics'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['USER_FOLDER'] = USER_FOLDER
+app.config['LOGS_FOLDER'] = LOGS_FOLDER
+app.config['ACTIVITY_FOLDER'] = ACTIVITY_FOLDER
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 ##### WORKS ####
 def connect_db():
@@ -39,12 +53,51 @@ def query_db(query, args=(), one=False):
 	return (rv[0] if rv else None) if one else rv
 #### WORKS ####
 
+<<<<<<< HEAD
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
 	command = request.headers['Value']
 	return "This is the command recieved: " + command
 
 #----------------------------------------------------------------------------------------------------------
+=======
+#Works...
+@app.route('/addUser', methods = ['GET', 'POST'])
+def handle_add_user_cmd():
+    iden = check_login_id()
+    new_id = request.headers['UserName']
+    new_pass = request.headers['Password']
+
+    users = access_user_table()
+
+    if new_id in users:
+        return "Username already in use!"
+    else:
+        if ("Admin" not in iden):
+            if "Admin" in new_id:
+                return "Not Allowed"
+            else:
+		        cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+		        g.db.commit()
+		        os.makedirs(USER_FOLDER + "/" + new_id)
+		        os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+		        os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+		        h = open("Statistics/" + new_id, 'w')
+		        h.write("Total Files (including Folders): 0")
+		        h.close()
+		        return "Username Added"
+        else:
+            cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+            g.db.commit()
+            os.makedirs(USER_FOLDER + "/" + new_id)
+            os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+            os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+            h = open("Statistics/" + new_id, 'w')
+            h.write("Total Files (including Folders): 0")
+            h.close()
+            return "Username Added"
+
+>>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
 #Works...
 def access_user_table():
     try:
@@ -58,6 +111,7 @@ def access_user_table():
     except:
         return []
 
+<<<<<<< HEAD
 #Works...
 def access_deleted_user_table():
     try:
@@ -71,6 +125,8 @@ def access_deleted_user_table():
     except:
         return []
 
+=======
+>>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
 #Works...
 @app.route("/check_login", methods = ['GET', 'POST'])
 def check_if_one_login():
@@ -269,13 +325,83 @@ def handle_admin_change_pass_cmd():
     else:
         return "Error in the Program with changing password..."
 
+@app.route("/admin_add_user", methods = ['GET', 'POST'])
+def handle_admin_add_user_cmd():
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+	userPW = request.headers['NewPass']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			iden = check_login_id()
+			new_id = userID
+			new_pass = userPW
+
+			users = access_user_table()
+
+			if new_id in users:
+				return "Username already in use!"
+			else:
+				if ("Admin" not in iden):
+					if "Admin" in new_id:
+						return "Not Allowed"
+					else:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
+						return "Username Added"
+				else:
+					if "Admin" in new_id:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
+						return "Username Added"
+					else:
+						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
+						return "Username Added"
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with adding a new user.."
+	else:
+		return "Error in the Program with adding a new user..."
+
 @app.route("/admin_delete_user", methods = ['GET', 'POST'])
 def handle_admin_delete_user_cmd():
+<<<<<<< HEAD
     commandingUser = check_login_id()
+=======
+>>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
     users = access_user_table()
     adminID = request.headers['AdminID']
     adminPW = request.headers['AdminPW']
     userID = request.headers['UserName']
+    filesToo = request.headers['FilesToo']
 
     deletedUsers = access_deleted_user_table()
 
@@ -289,12 +415,19 @@ def handle_admin_delete_user_cmd():
         if rightPassword:
             cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
             g.db.commit()
+<<<<<<< HEAD
             cur = g.db.execute("CREATE TABLE IF NOT EXISTS deleted_users(user text)")
             g.db.commit()
             if userID not in deletedUsers:
                 cur = g.db.execute("INSERT INTO deleted_users(user) VALUES (?)", [userID])
             g.db.commit()
             log_act(commandingUser, "changePassword")
+=======
+            if(filesToo == "True"):
+            	shutil.rmtree(USER_FOLDER + "/" + userID)
+            	os.remove(LOGS_FOLDER + "/" + userID)
+            	os.remove(ACTIVITY_FOLDER + "/" + userID)
+>>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
             return "User <" + userID + "> Deleted"
         else:
             return "Wrong Admin Password"
@@ -309,6 +442,96 @@ def handle_logout():
 	w.write("False " + "None")
 	w.close()
 	return "Logged Out"
+<<<<<<< HEAD
+=======
+#### WORKS ####
+
+@app.route("/command", methods = ['GET', 'POST'])
+def handle_command():
+	command = request.headers['Value']
+	index = command.find(":")
+	login = check_login_id()
+
+	w = open("Logs/" + login, 'a')
+	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
+	w.close()
+
+	content = []
+	with open("Statistics/TotalStats") as f:
+		content = f.readlines()
+	for elements in content:
+		colon = elements.find(":")
+		intVal = int(elements[colon+2:])
+		if command[0:index] == "Delete" or command[0:index] == "DirDelete":
+			intVal = intVal -1
+		elif command[0:index] == "Transfer" or command[0:index] == "DirCreate":
+			intVal += 1
+		h = open("Statistics/TotalStats", 'w')
+		h.write("Total Files (including Folders): " + str(intVal))
+		h.close()
+
+	with open("Statistics/" + login) as f:
+		content = f.readlines()
+	for elements in content:
+		colon = elements.find(":")
+		intVal = int(elements[colon+2:])
+		if command[0:index] == "Delete" or command[0:index] == "DirDelete":
+			intVal = intVal - 1
+		elif command[0:index] == "Transfer" or command[0:index] == "DirCreate":
+			intVal += 1
+		h = open("Statistics/" + login, 'w')
+		h.write("Total Files (including Folders): " + str(intVal))
+		h.close()
+
+	if command[0:index] == "Move":
+		return redirect(url_for('moving_file'))
+	elif command[0:index] == "Transfer":
+		return redirect(url_for('upload_file'))
+	elif command[0:index] == "Delete":
+		return redirect(url_for('delete_file'))
+	elif command[0:index] == "DirCreate":
+		return redirect(url_for('create_direc'))
+	elif command[0:index] == "DirDelete":
+		return redirect(url_for('delete_direc'))
+	elif command[0:index] == "DirMove":
+		return redirect(url_for('moving_direc'))
+
+	return "This is the command recieved: " + command
+
+@app.route('/create_direc', methods=['GET', 'POST'])
+def create_direc():
+	return "Directory Creation"
+
+@app.route('/delete_direc', methods=['GET', 'POST'])
+def delete_direc():
+	return "Directory Deletion"
+
+@app.route('/move_direc', methods=['GET', 'POST'])
+def moving_direc():
+	return "Directory Move"
+
+@app.route('/delete_file', methods=['GET', 'POST'])
+def delete_file():
+	return "File Deletion"
+
+@app.route('/move_file', methods=['GET', 'POST'])
+def moving_file():
+	return "File Move"
+
+@app.route('/file_transfer', methods=['GET', 'POST'])
+def upload_file():
+	return "File Transfer"
+	# file = request.files['file']
+	# command = request.headers['command']
+	# thePath = command[40:]
+	# login = check_login_id()
+	# if file and allowed_file(file.filename):
+	# 	filename = secure_filename(file.filename)
+	# 	file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+	# 	return  "File uploaded correctly"
+	# return command
+
+>>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
 
 if __name__ == "__main__":
 	app.run(debug=True)

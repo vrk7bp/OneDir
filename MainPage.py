@@ -138,7 +138,6 @@ class FileHandler():
                         DirectionListInOrder.append('DirMove: ' + changes[fileValueOne + len(self.NameOfFile):fileValueComma] + ' to ' + changes[fileValueTwo + len(self.NameOfFile):])
 
         finalList = self.remove_adjacentRepeats(DirectionListInOrder)
-        print "List \n"
         for values in finalList:
         	dic = {'Value': values}
         	string = requests.post(COMMAND, headers=dic)

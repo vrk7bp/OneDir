@@ -13,6 +13,7 @@ import json
 import sqlite3
 import shutil
 from werkzeug.utils import secure_filename
+import datetime
 
 dbName = "testUserDB"
 tableName = "users"
@@ -22,7 +23,7 @@ DATABASE = 'testUserDB'
 UPLOAD_FOLDER = '/home/student/CS3240FinalProject/TestFolder'
 USER_FOLDER = '/home/student/CS3240FinalProject/Users'
 LOGS_FOLDER = '/home/student/CS3240FinalProject/Logs'
-ACTIVITY_FOLDER = '/home/student/CS3240FinalProject/Activity'
+ACTIVITY_FOLDER = '/home/student/CS3240FinalProject/Statistics'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -74,6 +75,9 @@ def handle_add_user_cmd():
 		        os.makedirs(USER_FOLDER + "/" + new_id)
 		        os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
 		        os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+		        h = open("Statistics/" + new_id, 'w')
+		        h.write("Total Files (including Folders): 0")
+		        h.close()
 		        return "Username Added"
         else:
             cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
@@ -81,6 +85,9 @@ def handle_add_user_cmd():
             os.makedirs(USER_FOLDER + "/" + new_id)
             os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
             os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+            h = open("Statistics/" + new_id, 'w')
+            h.write("Total Files (including Folders): 0")
+            h.close()
             return "Username Added"
 
 #Works...
@@ -270,6 +277,9 @@ def handle_admin_add_user_cmd():
 						os.makedirs(USER_FOLDER + "/" + new_id)
 						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
 						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
 						return "Username Added"
 				else:
 					if "Admin" in new_id:
@@ -278,6 +288,9 @@ def handle_admin_add_user_cmd():
 						os.makedirs(USER_FOLDER + "/" + new_id)
 						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
 						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
 						return "Username Added"
 					else:
 						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
@@ -285,6 +298,9 @@ def handle_admin_add_user_cmd():
 						os.makedirs(USER_FOLDER + "/" + new_id)
 						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
 						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+						h = open("Statistics/" + new_id, 'w')
+						h.write("Total Files (including Folders): 0")
+						h.close()
 						return "Username Added"
 		else:
 			return "Wrong Admin Password"
@@ -356,9 +372,40 @@ def handle_logout():
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
 	command = request.headers['Value']
+	index = command.find(":")
 	login = check_login_id()
+
 	w = open("Logs/" + login, 'a')
-	w.write(command + "\n")
+	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
+	w.close()
+
+	content = []
+	with open("Statistics/TotalStats") as f:
+		content = f.readlines()
+	for elements in content:
+		colon = elements.find(":")
+		intVal = int(elements[colon+2:])
+		if command[0:index] == "Delete" or command[0:index] == "DirDelete":
+			intVal = intVal -1
+		elif command[0:index] == "Transfer" or command[0:index] == "DirCreate":
+			intVal += 1
+		h = open("Statistics/TotalStats", 'w')
+		h.write("Total Files (including Folders): " + str(intVal))
+		h.close()
+
+	with open("Statistics/" + login) as f:
+		content = f.readlines()
+	for elements in content:
+		colon = elements.find(":")
+		intVal = int(elements[colon+2:])
+		if command[0:index] == "Delete" or command[0:index] == "DirDelete":
+			intVal = intVal - 1
+		elif command[0:index] == "Transfer" or command[0:index] == "DirCreate":
+			intVal += 1
+		h = open("Statistics/" + login, 'w')
+		h.write("Total Files (including Folders): " + str(intVal))
+		h.close()
+
 	return "This is the command recieved: " + command
 
 #### Dealing with File Transfer Here ####

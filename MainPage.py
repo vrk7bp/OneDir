@@ -546,7 +546,7 @@ def runTwo():
             print "Thanks for using OneDir..."
             print ""
             print ""
-            time.sleep(5)
+            time.sleep(2)
             print "Please press Ctrl-C to exit completely."
             break
         elif (StringInput.strip() == "2"):
@@ -578,7 +578,7 @@ def runTwo():
             run.delete_user()
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
-      elif(StringInput.strip().lower() == "test"):
+        elif(StringInput.strip().lower() == "test"):
             userDict = {'command': "This is the command..."}
             test = {'file': open('test.txt', 'rb')}
             requests.post(FILE_TRANSFER, files=test, headers=userDict)

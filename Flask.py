@@ -275,6 +275,9 @@ def handle_admin_add_user_cmd():
 					if "Admin" in new_id:
 						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
 						g.db.commit()
+						os.makedirs(USER_FOLDER + "/" + new_id)
+						os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+						os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
 						return "Username Added"
 					else:
 						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
@@ -353,6 +356,9 @@ def handle_logout():
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
 	command = request.headers['Value']
+	login = check_login_id()
+	w = open("Logs/" + login, 'a')
+	w.write(command + "\n")
 	return "This is the command recieved: " + command
 
 #### Dealing with File Transfer Here ####
@@ -361,10 +367,12 @@ def handle_command():
 def upload_file():
 	file = request.files['file']
 	command = request.headers['command']
+	thePath = command[40:]
+	login = check_login_id()
 	if file and allowed_file(file.filename):
 		filename = secure_filename(file.filename)
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-		return  "File uploaded correctly" #redirect(url_for('uploaded_file', filename=filename))
+		return  "File uploaded correctly"
 	return command
 
 

@@ -541,6 +541,13 @@ def runTwo():
                 print "Not a valid input format."
         if (StringInput.strip() == "1"):
             run.logout()
+            print ""
+            print ""
+            print "Thanks for using OneDir..."
+            print ""
+            print ""
+            time.sleep(5)
+            print "Please press Ctrl-C to exit completely."
             break
         elif (StringInput.strip() == "2"):
             run.change_password()
@@ -571,10 +578,7 @@ def runTwo():
             run.delete_user()
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
-            # if (AutoUpdate):
-            #     GlobalUpdateManagerNum.value = 1
-            #     print GlobalUpdateManagerNum
-        elif(StringInput.strip().lower() == "test"):
+      elif(StringInput.strip().lower() == "test"):
             userDict = {'command': "This is the command..."}
             test = {'file': open('test.txt', 'rb')}
             requests.post(FILE_TRANSFER, files=test, headers=userDict)
@@ -608,10 +612,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p1.start()
+	p2.start()
 	p4.start()
 	p5.start()
 
-	p1.join()
+	p2.join()
 	p4.join()
 	p5.join()

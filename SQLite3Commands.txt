@@ -1,6 +1,0 @@
-These commands are in order in terms of when you are running on the EC2 Cloud...
-
-cd
-sqlite3 __DatabaseNameHere___
-	create table __TableNameHere__(userName varchar(48), password varchar(48), intField int, stringField varchar(48))
-	Need to find a way to create a Primary Key for userName with this...

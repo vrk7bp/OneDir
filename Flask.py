@@ -1,6 +1,4 @@
-from flask import Flask
-from flask import request
-from flask import g
+from flask import request, redirect, Flask, g, url_for
 import sys
 import time
 import os
@@ -406,21 +404,53 @@ def handle_command():
 		h.write("Total Files (including Folders): " + str(intVal))
 		h.close()
 
+	if command[0:index] == "Move":
+		return redirect(url_for('moving_file'))
+	elif command[0:index] == "Transfer":
+		return redirect(url_for('upload_file'))
+	elif command[0:index] == "Delete":
+		return redirect(url_for('delete_file'))
+	elif command[0:index] == "DirCreate":
+		return redirect(url_for('create_direc'))
+	elif command[0:index] == "DirDelete":
+		return redirect(url_for('delete_direc'))
+	elif command[0:index] == "DirMove":
+		return redirect(url_for('moving_direc'))
+
 	return "This is the command recieved: " + command
 
-#### Dealing with File Transfer Here ####
+@app.route('/create_direc', methods=['GET', 'POST'])
+def create_direc():
+	return "Directory Creation"
+
+@app.route('/delete_direc', methods=['GET', 'POST'])
+def delete_direc():
+	return "Directory Deletion"
+
+@app.route('/move_direc', methods=['GET', 'POST'])
+def moving_direc():
+	return "Directory Move"
+
+@app.route('/delete_file', methods=['GET', 'POST'])
+def delete_file():
+	return "File Deletion"
+
+@app.route('/move_file', methods=['GET', 'POST'])
+def moving_file():
+	return "File Move"
 
 @app.route('/file_transfer', methods=['GET', 'POST'])
 def upload_file():
-	file = request.files['file']
-	command = request.headers['command']
-	thePath = command[40:]
-	login = check_login_id()
-	if file and allowed_file(file.filename):
-		filename = secure_filename(file.filename)
-		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-		return  "File uploaded correctly"
-	return command
+	return "File Transfer"
+	# file = request.files['file']
+	# command = request.headers['command']
+	# thePath = command[40:]
+	# login = check_login_id()
+	# if file and allowed_file(file.filename):
+	# 	filename = secure_filename(file.filename)
+	# 	file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+	# 	return  "File uploaded correctly"
+	# return command
 
 
 if __name__ == "__main__":

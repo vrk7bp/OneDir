@@ -22,7 +22,15 @@ ALT_LOGIN = HOST + "/alt_login"
 LOGOUT = HOST + "/logout"
 CHANGE_PASS = HOST + "/change_pswd"
 COMMAND = HOST + "/command"
+
+## Shouldn't ever have to really use these...
 FILE_TRANSFER = HOST + "/file_transfer"
+CREATE_DIREC = HOST + "/create_direc"
+DELETE_DIREC = HOST + "/delete_direc"
+MOVE_DIREC = HOST + "/move_direc"
+DELETE_FILE = HOST + "/delete_file"
+MOVE_FILE = HOST + "/move_file"
+## End
 
 ADMIN_CHANGE_PASS = HOST + "/admin_change_pswd"
 ADMIN_DELETE_USER = HOST + "/admin_delete_user"
@@ -92,7 +100,7 @@ class FileHandler():
         for values in finalList:
         	dic = {'Value': values}
         	string = requests.post(COMMAND, headers=dic)
-        	print string.text
+        	#print string.text
         return finalList
 
     def organizeFile(self):
@@ -141,7 +149,7 @@ class FileHandler():
         for values in finalList:
         	dic = {'Value': values}
         	string = requests.post(COMMAND, headers=dic)
-        	print string.text
+        	#print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 

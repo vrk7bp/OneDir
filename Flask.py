@@ -13,7 +13,7 @@ import json
 import sqlite3
 
 dbName = "testUserDB"
-tableName = "users"
+tableNameU = "users"
 tableNameDU = "deleted_users"
 
 DATABASE = 'testUserDB'
@@ -39,35 +39,17 @@ def query_db(query, args=(), one=False):
 	return (rv[0] if rv else None) if one else rv
 #### WORKS ####
 
-#Works...
-@app.route('/addUser', methods = ['GET', 'POST'])
-def handle_add_user_cmd():
-    iden = check_login_id()
-    new_id = request.headers['UserName']
-    new_pass = request.headers['Password']
+@app.route("/command", methods = ['GET', 'POST'])
+def handle_command():
+	command = request.headers['Value']
+	return "This is the command recieved: " + command
 
-    users = access_user_table()
-
-    if new_id in users:
-        return "Username already in use!"
-    else:
-        if ("Admin" not in iden):
-            if "Admin" in new_id:
-                return "Not Allowed"
-            else:
-		        cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-		        g.db.commit()
-		        return "Username Added"
-        else:
-            cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-            g.db.commit()
-            return "Username Added"
-
+#----------------------------------------------------------------------------------------------------------
 #Works...
 def access_user_table():
     try:
     	users = []
-        cur = g.db.execute("select userName from " + tableName)
+        cur = g.db.execute("select userName from " + tableNameU)
         rows = cur.fetchall()
         for row in rows:
             users.append(row[0]) #row[0] because the return type is a tuple
@@ -146,10 +128,18 @@ def check_login_id(): #We will go ahead and keep this log-in mechanism the same,
     except:
         return ""
 
+def log_act(user, act):
+    print "?"
+    cur = g.db.execute("CREATE TABLE IF NOT EXISTS activity_log(userName text, activity text, time TIMESTAMP WITH LOCAL TIME ZONE)")
+    cur = g.db.execute("INSERT INTO activity_log(userName, activity, time) VALUES (?, ?, datetime(CURRENT_TIMESTAMP, 'localtime') )", [user, act])
+    g.db.commit()
+    return 0
+
 @app.route("/", methods = ['GET', 'POST'])
 def hello():
 	return "Hello World!"
 
+#----------------------------------------------------------------------------------------------------------
 @app.route("/login", methods = ['GET', 'POST'])
 def handle_login_cmd():
 	users = access_user_table()
@@ -161,7 +151,7 @@ def handle_login_cmd():
 			return "Logged in as: " + check_login_id()
 		else:
 			rightPassword = False
-			cur = g.db.execute("select * from " + tableName + " where userName is \'" + id + "\';")
+			cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + id + "\';")
 			rows = cur.fetchall()
 			for row in rows:
 				if(row[1] == password):
@@ -178,89 +168,6 @@ def handle_login_cmd():
 	else:
 		return "Invalid User"
 
-@app.route("/change_pswd", methods = ['GET', 'POST'])
-def handle_change_pass_cmd():
-	users = access_user_table()
-	id = request.headers['UserName']
-	oldPass = request.headers['OldPass']
-	newPass = request.headers['NewPass']
-
-	if id in users:
-		rightPassword = False
-		cur = g.db.execute("select * from " + tableName + " where userName is \'" + id + "\';")
-		rows = cur.fetchall()
-		for row in rows:
-			if(row[1] == oldPass):
-				rightPassword = True
-		if rightPassword:
-			cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [newPass, id])
-			g.db.commit()
-			return "Password Changed"
-		else:
-			return "Wrong Old Password"
-	elif check_login_status():
-		return "Error in the Program with changing password..."
-	else:
-		return "Error in the Program with changing password..."
-
-@app.route("/admin_change_pswd", methods = ['GET', 'POST'])
-def handle_admin_change_pass_cmd():
-    users = access_user_table()
-    adminID = request.headers['AdminID']
-    adminPW = request.headers['AdminPW']
-    userID = request.headers['UserName']
-    userPW = request.headers['NewPass']
-
-    if adminID in users:
-        rightPassword = False
-        cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
-        rows = cur.fetchall()
-        for row in rows:
-            if (row[1] == adminPW):
-                rightPassword = True
-        if rightPassword:
-            cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [userPW, userID])
-            g.db.commit()
-            return "Password Changed"
-        else:
-            return "Wrong Admin Password"
-    elif check_login_status():
-        return "Error in the Program with changing password..."
-    else:
-        return "Error in the Program with changing password..."
-
-@app.route("/admin_delete_user", methods = ['GET', 'POST'])
-def handle_admin_change_pass_cmd():
-    users = access_user_table()
-    adminID = request.headers['AdminID']
-    adminPW = request.headers['AdminPW']
-    userID = request.headers['UserName']
-
-    deletedUsers = access_deleted_user_table()
-
-    if adminID in users:
-        rightPassword = False
-        cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
-        rows = cur.fetchall()
-        for row in rows:
-            if (row[1] == adminPW):
-                rightPassword = True
-        if rightPassword:
-            cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
-            g.db.commit()
-            cur = g.db.execute("CREATE TABLE IF NOT EXISTS deleted_users(user text)")
-            g.db.commit()
-            if userID not in deletedUsers:
-                cur = g.db.execute("INSERT INTO deleted_users(user) VALUES (?)", [userID])
-            g.db.commit()
-            return "User <" + userID + "> Deleted"
-        else:
-            return "Wrong Admin Password"
-    elif check_login_status():
-        return "Error in the Program with changing password..."
-    else:
-        return "Error in the Program with changing password..."
-
 @app.route("/alt_login", methods = ['GET', 'POST'])
 def handle_alt_login():
 	id = request.headers['UserName']
@@ -269,7 +176,7 @@ def handle_alt_login():
 
 	if id == currentUser:
 		rightPassword = False
-		cur = g.db.execute("select * from " + tableName + " where userName is \'" + id + "\';")
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + id + "\';")
 		rows = cur.fetchall()
 		for row in rows:
 			if(row[1] == password):
@@ -282,19 +189,126 @@ def handle_alt_login():
 	else:
 		return "Invalid User"
 
+@app.route('/addUser', methods = ['GET', 'POST'])
+def handle_add_user_cmd():
+    commandingUser = check_login_id()
+    new_id = request.headers['UserName']
+    new_pass = request.headers['Password']
+
+    users = access_user_table()
+
+    if new_id in users:
+        return "Username already in use!"
+    else:
+        if ("Admin" not in commandingUser):
+            if "Admin" in new_id:
+                return "Not Allowed"
+            else:
+                cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+                g.db.commit()
+                log_act(commandingUser, "addUser")
+                return "Username Added"
+        else:
+            cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+            g.db.commit()
+            log_act(commandingUser, "addUser")
+            return "Username Added"
+
+@app.route("/change_pswd", methods = ['GET', 'POST'])
+def handle_change_pass_cmd():
+    commandingUser = check_login_id()
+    users = access_user_table()
+    id = request.headers['UserName']
+    oldPass = request.headers['OldPass']
+    newPass = request.headers['NewPass']
+
+    if id in users:
+        rightPassword = False
+        cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + id + "\';")
+        rows = cur.fetchall()
+        for row in rows:
+            if (row[1] == oldPass):
+                rightPassword = True
+        if rightPassword:
+            cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [newPass, id])
+            g.db.commit()
+            log_act(commandingUser, "changePassword")
+            return "Password Changed"
+        else:
+            return "Wrong Old Password"
+    elif check_login_status():
+        return "Error in the Program with changing password..."
+    else:
+        return "Error in the Program with changing password..."
+
+@app.route("/admin_change_pswd", methods = ['GET', 'POST'])
+def handle_admin_change_pass_cmd():
+    commandingUser = check_login_id()
+    users = access_user_table()
+    adminID = request.headers['AdminID']
+    adminPW = request.headers['AdminPW']
+    userID = request.headers['UserName']
+    userPW = request.headers['NewPass']
+
+    if adminID in users:
+        rightPassword = False
+        cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+        rows = cur.fetchall()
+        for row in rows:
+            if (row[1] == adminPW):
+                rightPassword = True
+        if rightPassword:
+            cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [userPW, userID])
+            g.db.commit()
+            log_act(commandingUser, "changePassword")
+            return "Password Changed"
+        else:
+            return "Wrong Admin Password"
+    elif check_login_status():
+        return "Error in the Program with changing password..."
+    else:
+        return "Error in the Program with changing password..."
+
+@app.route("/admin_delete_user", methods = ['GET', 'POST'])
+def handle_admin_delete_user_cmd():
+    commandingUser = check_login_id()
+    users = access_user_table()
+    adminID = request.headers['AdminID']
+    adminPW = request.headers['AdminPW']
+    userID = request.headers['UserName']
+
+    deletedUsers = access_deleted_user_table()
+
+    if adminID in users:
+        rightPassword = False
+        cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+        rows = cur.fetchall()
+        for row in rows:
+            if (row[1] == adminPW):
+                rightPassword = True
+        if rightPassword:
+            cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
+            g.db.commit()
+            cur = g.db.execute("CREATE TABLE IF NOT EXISTS deleted_users(user text)")
+            g.db.commit()
+            if userID not in deletedUsers:
+                cur = g.db.execute("INSERT INTO deleted_users(user) VALUES (?)", [userID])
+            g.db.commit()
+            log_act(commandingUser, "changePassword")
+            return "User <" + userID + "> Deleted"
+        else:
+            return "Wrong Admin Password"
+    elif check_login_status():
+        return "Error in the Program with changing password..."
+    else:
+        return "Error in the Program with changing password..."
+
 @app.route("/logout", methods = ['GET', 'POST'])
 def handle_logout():
 	w = open("login_info.txt", 'w')
 	w.write("False " + "None")
 	w.close()
 	return "Logged Out"
-#### WORKS ####
-
-@app.route("/command", methods = ['GET', 'POST'])
-def handle_command():
-	command = request.headers['Value']
-	return "This is the command recieved: " + command
-
 
 if __name__ == "__main__":
 	app.run(debug=True)

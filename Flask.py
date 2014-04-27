@@ -427,6 +427,7 @@ def get_user_info():
 			if userID in users:
 				newCur = g.db.execute("select * from " + tableNameU + " where userName is \'" + userID + "\';")
 				rows = newCur.fetchall()
+				log_act(commandingUser, "Got info for " + userID)
 				for row in rows:
 					return row[1]
 			else:
@@ -457,16 +458,46 @@ def get_admin_stats():
 			if userID == "total":
 				with open("Statistics/TotalStats") as f:
 					content = f.readlines()
+				log_act(commandingUser, "Got total statistics")
 				for elements in content:
 					return elements
 			else:
 				if userID in users:
 					with open("Statistics/" + userID) as f:
 						content = f.readlines()
+					log_act(commandingUser, "Got statistics for " + userID)
 					for elements in content:
 						return elements
 				else:
 					return "That UserName doesn't exist."
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with getting user info..."
+	else:
+		return "Error in the Program with getting user info..."
+
+@app.route("/admin_user_deletes", methods = ['GET', 'POST'])
+def get_admin_deletes():
+	commandingUser = check_login_id()
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			newCur = g.db.execute("select * from " + tableNameDU + ";")
+			theList = newCur.fetchall()
+			stringReturn = ""
+			for row in theList:
+				stringReturn += row[0] + "\n"
+			return stringReturn
 		else:
 			return "Wrong Admin Password"
 	elif check_login_status():

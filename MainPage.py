@@ -37,6 +37,7 @@ ADMIN_DELETE_USER = HOST + "/admin_delete_user"
 ADMIN_ADD_USER = HOST + "/admin_add_user"
 ADMIN_GET_USER_INFO = HOST + "/admin_get_user_info"
 ADMIN_GET_STATS = HOST + "/admin_get_stats"
+ADMIN_USER_DELETES = HOST + "/admin_user_deletes"
 
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
@@ -529,11 +530,11 @@ class MainPage():
                 if(string.text != "That UserName doesn't exist." and string.text != "Wrong Admin Password" and string.text != "Error in the Program with getting user info..."):
                     print
                     print
-                    print "***** Here is the users information *****"
+                    print "***** Here is the users statistics *****"
                     print
                     print string.text
                     print
-                    print "***** End of information *****"
+                    print "***** End of statistics *****"
                     print
                     print
                     return True
@@ -543,6 +544,36 @@ class MainPage():
                 return (string.text, False)
             else:
                 print "This is an Admin-Only command!"
+
+    def admin_user_deletes(self):
+        userName = requests.post(CHECK_USER)
+        if 'Admin/' in userName.text:
+            print "Admin Confirmed."
+            while(True):
+                adminPass = raw_input("Admin Password: ")
+                try:
+                    adminPW = str(adminPass)
+                    break
+                except:
+                    print "Not a valid input format."
+            userDict = {'AdminID': userName.text,'AdminPW': adminPW}
+            string = requests.post(ADMIN_USER_DELETES, headers=userDict)
+            if(string.text != "Wrong Admin Password" and string.text != "Error in the Program with getting user info..."):
+                print
+                print
+                print "***** Here are the users that have been deleted so far *****"
+                print
+                print string.text
+                print "***** End of list *****"
+                print
+                print
+                return True
+            print
+            print string.text
+            print
+            return (string.text, False)
+        else:
+            print "This is an Admin-Only command!"
 
 
 # The following two processes deal with the WatchDog commands being sent to the server.
@@ -619,6 +650,7 @@ def runTwo():
         print "  (6) **Admin-Only** Type a 6 to delete another user."
         print "  (7) **Admin-Only** Type a 7 to get information about a user."
         print "  (8) **Admin-Only** Type a 8 to get statistics about a user (or total statistics)."
+        print "  (9) **Admin-Only** Type a 9 to get a list of all the users that have been deleted."
         print " * If you are in User Update mode, simply input 'update' to perform a server update * "
         while (True):
             userInstruction = raw_input("Input: ")
@@ -668,6 +700,8 @@ def runTwo():
             run.admin_get_user_info()
         elif(StringInput.strip() == "8"):
             run.admin_get_stats()
+        elif(StringInput.strip() == "9"):
+            run.admin_user_deletes()
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

@@ -38,6 +38,8 @@ ADMIN_ADD_USER = HOST + "/admin_add_user"
 ADMIN_GET_USER_INFO = HOST + "/admin_get_user_info"
 ADMIN_GET_STATS = HOST + "/admin_get_stats"
 ADMIN_USER_DELETES = HOST + "/admin_user_deletes"
+ADMIN_GET_USER_LOGS = HOST + "/admin_get_user_logs"
+ADMIN_GET_USER_OPS = HOST + "/admin_get_user_operations"
 
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
@@ -575,6 +577,75 @@ class MainPage():
         else:
             print "This is an Admin-Only command!"
 
+    def admin_get_user_logs(self):
+            userName = requests.post(CHECK_USER)
+            if 'Admin/' in userName.text:
+                print "Admin Confirmed."
+                OpsTrueLogsFalse = ""
+                OpsTotalOrUser = ""
+                userID = ""
+
+                while(True):
+                    adminPass = raw_input("Admin Password: ")
+                    try:
+                        adminPW = str(adminPass)
+                        break
+                    except:
+                        print "Not a valid input format."
+                while(True):
+                    userNameToChange = raw_input("Do you want the logs or operations (logs/operations): ")
+                    try:
+                        OpsTrueLogsFalse = str(userNameToChange).strip().lower()
+                        if(OpsTrueLogsFalse == "logs" or OpsTrueLogsFalse == "operations"):
+                            break
+                        else:
+                            print "You have to say \'logs\' or \'operations\'."
+                    except:
+                        print "Not a valid input format."
+                if(OpsTrueLogsFalse == "operations"):
+                    while(True):
+                        userNameToChange = raw_input("Do you want the total operations or just a user (total/user): ")
+                        try:
+                            OpsTotalOrUser= str(userNameToChange).strip().lower()
+                            if(OpsTotalOrUser == "total" or OpsTotalOrUser == "user"):
+                                break
+                            else:
+                                print "You have to say \'total\' or \'user\'."
+                        except:
+                            print "Not a valid input format."
+                if(OpsTotalOrUser != "total"):
+                    while(True):
+                        userNameToChange = raw_input("Username you want logs/information for: ")
+                        try:
+                            userID = str(userNameToChange).strip()
+                            break
+                        except:
+                            print "Not a valid input format."
+
+                userDict1 = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
+                userDict2 = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID, 'OpsTotal': OpsTotalOrUser}
+
+                if(OpsTrueLogsFalse == "operations"):
+                    string = requests.post(ADMIN_GET_USER_OPS, headers=userDict2)
+                else:
+                    string = requests.post(ADMIN_GET_USER_LOGS, headers=userDict1)
+                boolean = False
+                if(string.text != "That UserName doesn't exist." and string.text != "Wrong Admin Password" and string.text != "Error in the Program with getting user info..."):
+                    print
+                    print
+                    print "***** Here is the users information *****"
+                    print
+                    print "For UserName " + userID + " the password is " + string.text
+                    print
+                    print "***** End of information *****"
+                    print
+                    print
+                    return True
+                print string.text
+                return (string.text, boolean)
+            else:
+                print "This is an Admin-Only command!"
+
 
 # The following two processes deal with the WatchDog commands being sent to the server.
 def runOneAuto():
@@ -645,12 +716,13 @@ def runTwo():
         print "  (1) Type a 1 to logout."
         print "  (2) Type a 2 to change your password."
         print "  (3) Type a 3 to switch between Auto-Update being on or off."
-        print "  (4) **Admin-Only** Type a 4 to add a new user."
-        print "  (5) **Admin-Only** Type a 5 to change another user's password."
-        print "  (6) **Admin-Only** Type a 6 to delete another user."
-        print "  (7) **Admin-Only** Type a 7 to get information about a user."
-        print "  (8) **Admin-Only** Type a 8 to get statistics about a user (or total statistics)."
-        print "  (9) **Admin-Only** Type a 9 to get a list of all the users that have been deleted."
+        print "  (4)  **Admin-Only** Type a 4 to add a new user."
+        print "  (5)  **Admin-Only** Type a 5 to change another user's password."
+        print "  (6)  **Admin-Only** Type a 6 to delete another user."
+        print "  (7)  **Admin-Only** Type a 7 to get information about a user."
+        print "  (8)  **Admin-Only** Type a 8 to get statistics about a user (or total statistics)."
+        print "  (9)  **Admin-Only** Type a 9 to get a list of all the users that have been deleted."
+        print "  (10) **Admin-Only** Type a 10 to get logs or operations of OneDir."
         print " * If you are in User Update mode, simply input 'update' to perform a server update * "
         while (True):
             userInstruction = raw_input("Input: ")
@@ -702,6 +774,8 @@ def runTwo():
             run.admin_get_stats()
         elif(StringInput.strip() == "9"):
             run.admin_user_deletes()
+        elif(StringInput.strip() == "10"):
+            run.admin_get_user_logs()
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

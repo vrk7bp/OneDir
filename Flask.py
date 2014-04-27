@@ -473,9 +473,9 @@ def get_admin_stats():
 		else:
 			return "Wrong Admin Password"
 	elif check_login_status():
-		return "Error in the Program with getting user info..."
+		return "Error in the Program with getting user stats..."
 	else:
-		return "Error in the Program with getting user info..."
+		return "Error in the Program with getting user stats..."
 
 @app.route("/admin_user_deletes", methods = ['GET', 'POST'])
 def get_admin_deletes():
@@ -494,10 +494,87 @@ def get_admin_deletes():
 		if rightPassword:
 			newCur = g.db.execute("select * from " + tableNameDU + ";")
 			theList = newCur.fetchall()
+			log_act(commandingUser, "Got list of deleted users")
 			stringReturn = ""
 			for row in theList:
 				stringReturn += row[0] + "\n"
 			return stringReturn
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with getting user deletes..."
+	else:
+		return "Error in the Program with getting user deletes..."
+
+@app.route("/admin_get_user_operations", methods = ['GET', 'POST'])
+def get_admin_operations():
+	commandingUser = check_login_id()
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+	totalOPs = request.headers['OpsTotal']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			if totalOPs == "total":
+				newCur = g.db.execute("select * from activity_log;")
+				theList = newCur.fetchall()
+				stringReturn = ""
+				log_act(commandingUser, "Got total user operations")
+				for row in theList:
+					stringReturn += "UserName: " + row[0] + ", Operation: " + row[1] + ", Time: " + str(row[2]) + "\n"
+				return stringReturn
+			else:
+				if userID in users:
+					newCur = g.db.execute("select * from activity_log where userName is \'" + userID + "\';")
+					theList = newCur.fetchall()
+					stringReturn = ""
+					log_act(commandingUser, "Got user operations for " + userID)
+					for row in theList:
+						stringReturn += "UserName: " + row[0] + ", Operation: " + row[1] + ", Time: " + str(row[2]) + "\n"
+					return stringReturn
+				else:
+					return "That UserName doesn't exist."
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with getting user info..."
+	else:
+		return "Error in the Program with getting user info..."
+
+@app.route("/admin_get_user_logs", methods = ['GET', 'POST'])
+def get_admin_logs():
+	commandingUser = check_login_id()
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			if userID in users:
+				with open("Logs/" + userID) as f:
+					content = f.readlines()
+				log_act(commandingUser, "Got logs for " + userID)
+				returnString = ""
+				for elements in content:
+					returnString += elements
+				return returnString
+			else:
+				return "That UserName doesn't exist."
 		else:
 			return "Wrong Admin Password"
 	elif check_login_status():
@@ -510,12 +587,12 @@ def handle_command():
 	commandingUser = check_login_id()
 	command = request.headers['Value']
 	index = command.find(":")
-	#login = check_login_id()
+	login = check_login_id()
 
 	w = open("Logs/" + login, 'a')
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
 	w.close()
-	log_act(commandingUser, command)
+	#log_act(commandingUser, command)
 
 	content = []
 	with open("Statistics/TotalStats") as f:

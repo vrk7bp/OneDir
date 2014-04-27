@@ -66,7 +66,6 @@ class FileHandler():
         # I am going to add extra logic that ignores the "create" part of these new files copied in and instead declare a None in the first part
         # of the move command. This will then have to be taken care of by the server...
 
-
         DirectionListInOrder = []
         if(changes[0:4] == 'File'):
             if(changes[6:14] == 'modified'):
@@ -103,8 +102,12 @@ class FileHandler():
 
         finalList = self.remove_adjacentRepeats(DirectionListInOrder)
         for values in finalList:
-        	dic = {'Value': values}
-        	string = requests.post(COMMAND, headers=dic)
+            dic = {'Value': values}
+            theFile = {}
+            if "Transfer: " in values:
+                stringFileName = values[11:]
+                theFile = {'file': open(stringFileName, 'rb')}
+            string = requests.post(COMMAND, headers=dic, files=theFile)
         	#print string.text
         return finalList
 
@@ -152,9 +155,14 @@ class FileHandler():
 
         finalList = self.remove_adjacentRepeats(DirectionListInOrder)
         for values in finalList:
-        	dic = {'Value': values}
-        	string = requests.post(COMMAND, headers=dic)
-        	#print string.text
+            dic = {'Value': values}
+            theFile = {}
+            if "Transfer: " in values:
+                stringFileName = values[11:]
+                theFile = {'file': open(stringFileName, 'rb')}
+            string = requests.post(COMMAND, headers=dic, files=theFile)
+            index = values.find(":")
+            print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 

@@ -623,23 +623,23 @@ def handle_command():
 		h.close()
 
 	if command[0:index] == "Move":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		return redirect(url_for('moving_file', headers=dic))
 	elif command[0:index] == "Transfer":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		newFile = {'file': theFile}
 		return redirect(url_for('upload_file', files=newFile, headers=dic), code=307)
 	elif command[0:index] == "Delete":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		return redirect(url_for('delete_file', headers=dic))
 	elif command[0:index] == "DirCreate":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		return redirect(url_for('create_direc', headers=dic))
 	elif command[0:index] == "DirDelete":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		return redirect(url_for('delete_direc', headers=dic))
 	elif command[0:index] == "DirMove":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+3:], 'UserName': login}
 		return redirect(url_for('moving_direc', headers=dic))
 
 	return "This is the command recieved: " + command
@@ -668,9 +668,14 @@ def moving_file():
 def upload_file():
 	fileName = request.files['file']
 	Directory = request.headers['Value']
+	# indexSlash = str.rindex(Directory)
+	# filePath = Directory[0:indexSlash]
+	#userID = request.headers['UserName']
 	login = check_login_id()
 	if fileName and allowed_file(fileName.filename):
 		filename = secure_filename(fileName.filename)
+		#file.save(os.path.join(app.config['USER_FOLDER'] + "/" + login + "/" + filePath, filename))
+		#return os.path.join(app.config['USER_FOLDER'] + "/" + login + "/", filename)
 		fileName.save(os.path.join(app.config['USER_FOLDER'], login, filename))
 		return  "File uploaded correctly"
 	return Directory

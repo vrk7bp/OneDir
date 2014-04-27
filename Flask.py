@@ -51,53 +51,7 @@ def query_db(query, args=(), one=False):
 	cur = g.db.execute(query, args)
 	rv = [dict((cur.description[idx][0], value) for idx, value in enumerate(row)) for row in cur.fetchall()]
 	return (rv[0] if rv else None) if one else rv
-#### WORKS ####
 
-<<<<<<< HEAD
-@app.route("/command", methods = ['GET', 'POST'])
-def handle_command():
-	command = request.headers['Value']
-	return "This is the command recieved: " + command
-
-#----------------------------------------------------------------------------------------------------------
-=======
-#Works...
-@app.route('/addUser', methods = ['GET', 'POST'])
-def handle_add_user_cmd():
-    iden = check_login_id()
-    new_id = request.headers['UserName']
-    new_pass = request.headers['Password']
-
-    users = access_user_table()
-
-    if new_id in users:
-        return "Username already in use!"
-    else:
-        if ("Admin" not in iden):
-            if "Admin" in new_id:
-                return "Not Allowed"
-            else:
-		        cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-		        g.db.commit()
-		        os.makedirs(USER_FOLDER + "/" + new_id)
-		        os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
-		        os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
-		        h = open("Statistics/" + new_id, 'w')
-		        h.write("Total Files (including Folders): 0")
-		        h.close()
-		        return "Username Added"
-        else:
-            cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-            g.db.commit()
-            os.makedirs(USER_FOLDER + "/" + new_id)
-            os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
-            os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
-            h = open("Statistics/" + new_id, 'w')
-            h.write("Total Files (including Folders): 0")
-            h.close()
-            return "Username Added"
-
->>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
 #Works...
 def access_user_table():
     try:
@@ -110,8 +64,6 @@ def access_user_table():
 
     except:
         return []
-
-<<<<<<< HEAD
 #Works...
 def access_deleted_user_table():
     try:
@@ -124,28 +76,6 @@ def access_deleted_user_table():
 
     except:
         return []
-
-=======
->>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
-#Works...
-@app.route("/check_login", methods = ['GET', 'POST'])
-def check_if_one_login():
-	try:
-		r = open("login_info.txt", 'r')
-		out = r.readlines()
-		info = []
-		for i in out:
-			word = i.split(" ")
-			for j in range(len(word)):
-				if word != " ":
-					info.append(word[j])
-					r.closed
-		if word[0] == "True":
-			return word[1]
-		else:
-			return ""
-	except:
-		return ""
 
 #Works...
 def check_login_status(): #We will go ahead and keep this log-in mechanism the same, just add a password check to the command handler.
@@ -195,7 +125,26 @@ def log_act(user, act):
 def hello():
 	return "Hello World!"
 
-#----------------------------------------------------------------------------------------------------------
+#Works...
+@app.route("/check_login", methods = ['GET', 'POST'])
+def check_if_one_login():
+	try:
+		r = open("login_info.txt", 'r')
+		out = r.readlines()
+		info = []
+		for i in out:
+			word = i.split(" ")
+			for j in range(len(word)):
+				if word != " ":
+					info.append(word[j])
+					r.closed
+		if word[0] == "True":
+			return word[1]
+		else:
+			return ""
+	except:
+		return ""
+
 @app.route("/login", methods = ['GET', 'POST'])
 def handle_login_cmd():
 	users = access_user_table()
@@ -216,6 +165,7 @@ def handle_login_cmd():
 				w = open("login_info.txt", 'w')
 				w.write("True " + id)
 				w.close()
+				log_act(id, "Logged in")
 				return "Login Successful"
 			else:
 				return "Wrong Password"
@@ -239,36 +189,51 @@ def handle_alt_login():
 				rightPassword = True
 		if rightPassword == False:
 			return "Wrong Password"
+		log_act(currentUser, "Logged in from another computer")
 		return "Login Successful"
 	elif check_login_status():
 		return "Bad UserName"
 	else:
 		return "Invalid User"
 
+#Works...
 @app.route('/addUser', methods = ['GET', 'POST'])
 def handle_add_user_cmd():
-    commandingUser = check_login_id()
-    new_id = request.headers['UserName']
-    new_pass = request.headers['Password']
+	commandingUser = check_login_id()
+	iden = check_login_id()
+	new_id = request.headers['UserName']
+	new_pass = request.headers['Password']
 
-    users = access_user_table()
+	users = access_user_table()
 
-    if new_id in users:
-        return "Username already in use!"
-    else:
-        if ("Admin" not in commandingUser):
-            if "Admin" in new_id:
-                return "Not Allowed"
-            else:
-                cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-                g.db.commit()
-                log_act(commandingUser, "addUser")
-                return "Username Added"
-        else:
-            cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
-            g.db.commit()
-            log_act(commandingUser, "addUser")
-            return "Username Added"
+	if new_id in users:
+		return "Username already in use!"
+	else:
+		if ("Admin" not in iden):
+			if "Admin" in new_id:
+				return "Not Allowed"
+			else:
+				cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+				g.db.commit()
+				os.makedirs(USER_FOLDER + "/" + new_id)
+				os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+				os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+				h = open("Statistics/" + new_id, 'w')
+				h.write("Total Files (including Folders): 0")
+				h.close()
+				log_act(new_id, "created own account")
+				return "Username Added"
+		else:
+			cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
+			g.db.commit()
+			os.makedirs(USER_FOLDER + "/" + new_id)
+			os.open(LOGS_FOLDER + "/" + new_id, os.O_CREAT)
+			os.open(ACTIVITY_FOLDER + "/" + new_id, os.O_CREAT)
+			h = open("Statistics/" + new_id, 'w')
+			h.write("Total Files (including Folders): 0")
+			h.close()
+			log_act(new_id, "created own account")
+			return "Username Added"
 
 @app.route("/change_pswd", methods = ['GET', 'POST'])
 def handle_change_pass_cmd():
@@ -288,7 +253,7 @@ def handle_change_pass_cmd():
         if rightPassword:
             cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [newPass, id])
             g.db.commit()
-            log_act(commandingUser, "changePassword")
+            log_act(commandingUser, "changed own Password")
             return "Password Changed"
         else:
             return "Wrong Old Password"
@@ -316,7 +281,7 @@ def handle_admin_change_pass_cmd():
         if rightPassword:
             cur = g.db.execute("UPDATE users SET password=? WHERE userName=?;", [userPW, userID])
             g.db.commit()
-            log_act(commandingUser, "changePassword")
+            log_act(commandingUser, "changePassword for " + userID)
             return "Password Changed"
         else:
             return "Wrong Admin Password"
@@ -327,6 +292,7 @@ def handle_admin_change_pass_cmd():
 
 @app.route("/admin_add_user", methods = ['GET', 'POST'])
 def handle_admin_add_user_cmd():
+	commandingUser = check_login_id()
 	users = access_user_table()
 	adminID = request.headers['AdminID']
 	adminPW = request.headers['AdminPW']
@@ -335,7 +301,7 @@ def handle_admin_add_user_cmd():
 
 	if adminID in users:
 		rightPassword = False
-		cur = g.db.execute("select * from " + tableName + " where userName is \'" + adminID + "\';")
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
 		rows = cur.fetchall()
 		for row in rows:
 			if (row[1] == adminPW):
@@ -362,6 +328,7 @@ def handle_admin_add_user_cmd():
 						h = open("Statistics/" + new_id, 'w')
 						h.write("Total Files (including Folders): 0")
 						h.close()
+						log_act(commandingUser, "createdUser " + new_id)
 						return "Username Added"
 				else:
 					if "Admin" in new_id:
@@ -373,6 +340,7 @@ def handle_admin_add_user_cmd():
 						h = open("Statistics/" + new_id, 'w')
 						h.write("Total Files (including Folders): 0")
 						h.close()
+						log_act(commandingUser, "createdUser " + new_id)
 						return "Username Added"
 					else:
 						cur = g.db.execute("INSERT INTO users (userName, password) VALUES (?, ?)", [new_id, new_pass])
@@ -383,6 +351,7 @@ def handle_admin_add_user_cmd():
 						h = open("Statistics/" + new_id, 'w')
 						h.write("Total Files (including Folders): 0")
 						h.close()
+						log_act(commandingUser, "createdUser " + new_id)
 						return "Username Added"
 		else:
 			return "Wrong Admin Password"
@@ -393,10 +362,7 @@ def handle_admin_add_user_cmd():
 
 @app.route("/admin_delete_user", methods = ['GET', 'POST'])
 def handle_admin_delete_user_cmd():
-<<<<<<< HEAD
     commandingUser = check_login_id()
-=======
->>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
     users = access_user_table()
     adminID = request.headers['AdminID']
     adminPW = request.headers['AdminPW']
@@ -415,19 +381,16 @@ def handle_admin_delete_user_cmd():
         if rightPassword:
             cur = g.db.execute("DELETE from users WHERE userName=?", [userID])
             g.db.commit()
-<<<<<<< HEAD
             cur = g.db.execute("CREATE TABLE IF NOT EXISTS deleted_users(user text)")
             g.db.commit()
             if userID not in deletedUsers:
                 cur = g.db.execute("INSERT INTO deleted_users(user) VALUES (?)", [userID])
             g.db.commit()
-            log_act(commandingUser, "changePassword")
-=======
+            log_act(commandingUser, userID + " Deleted")
             if(filesToo == "True"):
             	shutil.rmtree(USER_FOLDER + "/" + userID)
             	os.remove(LOGS_FOLDER + "/" + userID)
             	os.remove(ACTIVITY_FOLDER + "/" + userID)
->>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
             return "User <" + userID + "> Deleted"
         else:
             return "Wrong Admin Password"
@@ -438,16 +401,46 @@ def handle_admin_delete_user_cmd():
 
 @app.route("/logout", methods = ['GET', 'POST'])
 def handle_logout():
+	commandingUser = check_login_id()
+	log_act(commandingUser, "Logged Out")
 	w = open("login_info.txt", 'w')
 	w.write("False " + "None")
 	w.close()
 	return "Logged Out"
-<<<<<<< HEAD
-=======
-#### WORKS ####
+
+@app.route("/admin_get_user_info", methods = ['GET', 'POST'])
+def get_user_info():
+	commandingUser = check_login_id()
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			if userID in users:
+				newCur = g.db.execute("select * from " + tableNameU + " where userName is \'" + userID + "\';")
+				rows = newCur.fetchall()
+				for row in rows:
+					return row[1]
+			else:
+				return "That UserName doesn't exist."
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with getting user info..."
+	else:
+		return "Error in the Program with getting user info..."
 
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
+	commandingUser = check_login_id()
 	command = request.headers['Value']
 	index = command.find(":")
 	login = check_login_id()
@@ -455,6 +448,7 @@ def handle_command():
 	w = open("Logs/" + login, 'a')
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
 	w.close()
+	log_act(commandingUser, command)
 
 	content = []
 	with open("Statistics/TotalStats") as f:
@@ -530,8 +524,6 @@ def upload_file():
 	# 	file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 	# 	return  "File uploaded correctly"
 	# return command
-
->>>>>>> 8545ab09d3eef332351fc2b04a69c8156e5a5ca9
 
 if __name__ == "__main__":
 	app.run(debug=True)

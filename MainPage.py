@@ -36,6 +36,7 @@ ADMIN_CHANGE_PASS = HOST + "/admin_change_pswd"
 ADMIN_DELETE_USER = HOST + "/admin_delete_user"
 ADMIN_ADD_USER = HOST + "/admin_add_user"
 ADMIN_GET_USER_INFO = HOST + "/admin_get_user_info"
+ADMIN_GET_STATS = HOST + "/admin_get_stats"
 
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
@@ -504,6 +505,45 @@ class MainPage():
             else:
                 print "This is an Admin-Only command!"
 
+    def admin_get_stats(self):
+            userName = requests.post(CHECK_USER)
+            if 'Admin/' in userName.text:
+                print "Admin Confirmed."
+
+                while(True):
+                    adminPass = raw_input("Admin Password: ")
+                    try:
+                        adminPW = str(adminPass)
+                        break
+                    except:
+                        print "Not a valid input format."
+                while(True):
+                    userNameToChange = raw_input("Username you want statistics for (type total for total information): ")
+                    try:
+                        userID = str(userNameToChange)
+                        break
+                    except:
+                        print "Not a valid input format."
+                userDict = {'AdminID': userName.text,'AdminPW': adminPW, 'UserName': userID}
+                string = requests.post(ADMIN_GET_STATS, headers=userDict)
+                if(string.text != "That UserName doesn't exist." and string.text != "Wrong Admin Password" and string.text != "Error in the Program with getting user info..."):
+                    print
+                    print
+                    print "***** Here is the users information *****"
+                    print
+                    print string.text
+                    print
+                    print "***** End of information *****"
+                    print
+                    print
+                    return True
+                print
+                print string.text
+                print
+                return (string.text, False)
+            else:
+                print "This is an Admin-Only command!"
+
 
 # The following two processes deal with the WatchDog commands being sent to the server.
 def runOneAuto():
@@ -578,6 +618,7 @@ def runTwo():
         print "  (5) **Admin-Only** Type a 5 to change another user's password."
         print "  (6) **Admin-Only** Type a 6 to delete another user."
         print "  (7) **Admin-Only** Type a 7 to get information about a user."
+        print "  (8) **Admin-Only** Type a 8 to get statistics about a user (or total statistics)."
         print " * If you are in User Update mode, simply input 'update' to perform a server update * "
         while (True):
             userInstruction = raw_input("Input: ")
@@ -625,6 +666,8 @@ def runTwo():
             run.delete_user()
         elif(StringInput.strip() == "7"):
             run.admin_get_user_info()
+        elif(StringInput.strip() == "8"):
+            run.admin_get_stats()
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

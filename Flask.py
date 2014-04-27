@@ -438,12 +438,48 @@ def get_user_info():
 	else:
 		return "Error in the Program with getting user info..."
 
+@app.route("/admin_get_stats", methods = ['GET', 'POST'])
+def get_admin_stats():
+	commandingUser = check_login_id()
+	users = access_user_table()
+	adminID = request.headers['AdminID']
+	adminPW = request.headers['AdminPW']
+	userID = request.headers['UserName']
+
+	if adminID in users:
+		rightPassword = False
+		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + adminID + "\';")
+		rows = cur.fetchall()
+		for row in rows:
+			if (row[1] == adminPW):
+				rightPassword = True
+		if rightPassword:
+			if userID == "total":
+				with open("Statistics/TotalStats") as f:
+					content = f.readlines()
+				for elements in content:
+					return elements
+			else:
+				if userID in users:
+					with open("Statistics/" + userID) as f:
+						content = f.readlines()
+					for elements in content:
+						return elements
+				else:
+					return "That UserName doesn't exist."
+		else:
+			return "Wrong Admin Password"
+	elif check_login_status():
+		return "Error in the Program with getting user info..."
+	else:
+		return "Error in the Program with getting user info..."
+
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
 	commandingUser = check_login_id()
 	command = request.headers['Value']
 	index = command.find(":")
-	login = check_login_id()
+	#login = check_login_id()
 
 	w = open("Logs/" + login, 'a')
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")

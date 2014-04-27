@@ -161,7 +161,6 @@ class FileHandler():
                 stringFileName = values[11:]
                 theFile = {'file': open(stringFileName, 'rb')}
             string = requests.post(COMMAND, headers=dic, files=theFile)
-            index = values.find(":")
             print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList

@@ -588,7 +588,10 @@ def handle_command():
 	command = request.headers['Value']
 	index = command.find(":")
 	login = check_login_id()
-	theFile = request.files['file']
+	try:
+		theFile = request.files['file']
+	except:
+		theFile = {}
 
 	w = open("Logs/" + login, 'a')
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
@@ -623,33 +626,43 @@ def handle_command():
 		h.close()
 
 	if command[0:index] == "Move":
-		dic = {'Value': command[index+3:]}
-		return redirect(url_for('moving_file', headers=dic))
+		dic = {'Value': command[index+4:]}
+		return redirect(url_for('moving_file', headers=dic), code=307)
 	elif command[0:index] == "Transfer":
-		dic = {'Value': command[index+3:]}
+		dic = {'Value': command[index+4:]}
 		newFile = {'file': theFile}
 		return redirect(url_for('upload_file', files=newFile, headers=dic), code=307)
 	elif command[0:index] == "Delete":
-		dic = {'Value': command[index+3:]}
-		return redirect(url_for('delete_file', headers=dic))
+		dic = {'Value': command[index+4:]}
+		return redirect(url_for('delete_file', headers=dic), code=307)
 	elif command[0:index] == "DirCreate":
-		dic = {'Value': command[index+3:]}
-		return redirect(url_for('create_direc', headers=dic))
+		dic = {'Value': command[index+4:]}
+		return redirect(url_for('create_direc', headers=dic), code=307)
 	elif command[0:index] == "DirDelete":
-		dic = {'Value': command[index+3:]}
-		return redirect(url_for('delete_direc', headers=dic))
+		dic = {'Value': command[index+4:]}
+		return redirect(url_for('delete_direc', headers=dic), code=307)
 	elif command[0:index] == "DirMove":
-		dic = {'Value': command[index+3:]}
-		return redirect(url_for('moving_direc', headers=dic))
+		dic = {'Value': command[index+4:]}
+		return redirect(url_for('moving_direc', headers=dic), code=307)
 
 	return "This is the command recieved: " + command
 
 @app.route('/create_direc', methods=['GET', 'POST'])
 def create_direc():
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	Directory = interVal[index+3:]
+	login = check_login_id()
+	os.makedirs(USER_FOLDER + "/" + login + "/" + Directory)
 	return "Directory Creation"
 
 @app.route('/delete_direc', methods=['GET', 'POST'])
 def delete_direc():
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	Directory = interVal[index+3:]
+	login = check_login_id()
+	shutil.rmtree(USER_FOLDER + "/" + login + "/" + Directory)
 	return "Directory Deletion"
 
 @app.route('/move_direc', methods=['GET', 'POST'])
@@ -658,6 +671,11 @@ def moving_direc():
 
 @app.route('/delete_file', methods=['GET', 'POST'])
 def delete_file():
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	Directory = interVal[index+3:]
+	login = check_login_id()
+	os.remove(USER_FOLDER + "/" + login + "/" + Directory)
 	return "File Deletion"
 
 @app.route('/move_file', methods=['GET', 'POST'])
@@ -667,11 +685,13 @@ def moving_file():
 @app.route('/file_transfer', methods=['GET', 'POST'])
 def upload_file():
 	fileName = request.files['file']
-	Directory = request.headers['Value']
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	Directory = interVal[index+3:]
 	login = check_login_id()
 	if fileName and allowed_file(fileName.filename):
 		filename = secure_filename(fileName.filename)
-		fileName.save(os.path.join(app.config['USER_FOLDER'], login, filename))
+		fileName.save(os.path.join(app.config['USER_FOLDER'], login, Directory))
 		return  "File uploaded correctly"
 	return Directory
 

@@ -675,7 +675,7 @@ def handle_command():
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" + "\n")
 	w.close()
 
-	q = open("OperationsToUpdate", 'a')
+	q = open("../OperationsToUpdate.txt", 'a')
 	q.write(command + "\n")
 	q.close()
 	#log_act(commandingUser, command)

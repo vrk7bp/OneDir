@@ -188,8 +188,6 @@ def get_the_file():
 	path = request.headers['Path']
 	login = check_login_id()
 
-	return app.config['USER_FOLDER'] + "/" + login + "/" + path
-
 	return send_from_directory(app.config['USER_FOLDER'] + "/" + login, path)
 
 

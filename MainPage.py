@@ -803,7 +803,7 @@ def runTwo():
             userDict = {"Number": str(GlobalUserNumber)}
             print requests.post(GET_UPDATE, headers=userDict).text
         elif(StringInput.strip().lower() == "testfile"):
-            userDict = {"Path": "login_info.txt"}
+            userDict = {"Path": "Test/test.txt"}
             theFile = requests.post(GET_FILE, headers=userDict)
             print theFile.content
         elif (StringInput.strip().lower() == "update"):

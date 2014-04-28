@@ -1,4 +1,4 @@
-from flask import request, redirect, Flask, g, url_for
+from flask import request, redirect, Flask, g, url_for, send_from_directory
 import sys
 import time
 import os
@@ -135,7 +135,7 @@ def makeListOfAccountLogIns():
 		f.close()
 
 def takeNumberOut(number):
-	listOfNums = = [int(line.strip()) for line in open('../AccountNumbers.txt')]
+	listOfNums = [int(line.strip()) for line in open('../AccountNumbers.txt')]
 	# f = open("../AccountNumbers.txt", 'r')
 	# out = f.readlines()
 	# for i in out:

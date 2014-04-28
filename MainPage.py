@@ -800,11 +800,11 @@ def runTwo():
         elif(StringInput.strip() == "10"):
             run.admin_get_user_logs()
         elif(StringInput.strip().lower() == "testupdate"):
-            userDict = {"Number": GlobalUserNumber}
+            userDict = {"Number": str(GlobalUserNumber)}
             print requests.post(GET_UPDATE, headers=userDict).text
         elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "login_info.txt"}
-            requests.post(GET_UPDATE, headers=userDict)
+            requests.post(GET_FILE, headers=userDict)
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

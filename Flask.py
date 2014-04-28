@@ -198,11 +198,8 @@ def getOperationsAsString():
 @app.route("/get_update", methods = ['GET', 'POST'])
 def get_update():
 	number = request.headers['Number']
-	if(checkIfNumberIsIn(int(number))):
-		takeNumberOut(int(number))
-		return getOperationsAsString()
-	else:
-		return "Up to Date"
+	takeNumberOut(int(number))
+	return getOperationsAsString()
 
 @app.route("/get_the_file", methods = ['GET', 'POST'])
 def get_the_file():

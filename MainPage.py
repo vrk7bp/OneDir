@@ -804,7 +804,8 @@ def runTwo():
             print requests.post(GET_UPDATE, headers=userDict).text
         elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "login_info.txt"}
-            requests.post(GET_FILE, headers=userDict)
+            theFile = requests.post(GET_FILE, headers=userDict)
+            print theFile.content
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

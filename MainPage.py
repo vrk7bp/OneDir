@@ -801,7 +801,7 @@ def runTwo():
             run.admin_get_user_logs()
         elif(StringInput.strip().lower() == "testupdate"):
             userDict = {"Number": GlobalUserNumber}
-            requests.post(GET_UPDATE, headers=userDict)
+            print requests.post(GET_UPDATE, headers=userDict).text
         elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "login_info.txt"}
             requests.post(GET_UPDATE, headers=userDict)

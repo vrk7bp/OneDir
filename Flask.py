@@ -262,9 +262,9 @@ def handle_login_cmd():
 			rightPassword = False
 			cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + id + "\';")
 			rows = cur.fetchall()
-			rightPassword = ""
+			rightPasswordString = ""
 			for row in rows:
-				rightPassword = row[1]
+				rightPasswordString = row[1]
 				if(row[1] == password):
 					rightPassword = True
 			if rightPassword:
@@ -276,7 +276,7 @@ def handle_login_cmd():
 				ListOfUsers.append(AmountOfUsers)
 				return "Login Successful (" + str(AmountOfUsers) + ")"
 			else:
-				return "Wrong Password: The first letter of your password is " + rightPassword[0:1] + " and the last letter is " + rightPassword[-1]
+				return "Wrong Password: The first letter of your password is " + rightPasswordString[0:1] + " and the last letter is " + rightPasswordString[-1]
 	elif check_login_status():
 		return "Logged in as: " + check_login_id()
 	else:
@@ -294,13 +294,13 @@ def handle_alt_login():
 		rightPassword = False
 		cur = g.db.execute("select * from " + tableNameU + " where userName is \'" + id + "\';")
 		rows = cur.fetchall()
-		rightPassword = ""
+		rightPasswordString = ""
 		for row in rows:
-			rightPassword = row[1]
+			rightPasswordString = row[1]
 			if(row[1] == password):
 				rightPassword = True
 		if rightPassword == False:
-			return "Wrong Password: The first letter of your password is " + rightPassword[0:1] + " and the last letter is " + rightPassword[-1]
+			return "Wrong Password: The first letter of your password is " + rightPasswordString[0:1] + " and the last letter is " + rightPasswordString[-1]
 		log_act(currentUser, "Logged in from another computer")
 		AmountOfUsers += 1
 		ListOfUsers.append(AmountOfUsers)

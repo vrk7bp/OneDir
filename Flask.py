@@ -139,7 +139,7 @@ def takeNumberOut(number):
 	f = open("../AccountNumbers.txt", 'r')
 	out = f.readlines()
 	for i in out:
-		listOfNums.append(int(i.strip())
+		listOfNums.append(int(i.strip()))
 	f.close()
 
 	listOfNums.remove(number)
@@ -149,14 +149,14 @@ def takeNumberOut(number):
 	for elements in len(listOfNums):
 		stringNum = str(listOfNums[elements])
 		a.write(stringNum + "\n")
-	f.close()
+	a.close()
 
 def checkIfNumberIsIn(number):
 	listOfNums = []
 	f = open("../AccountNumbers.txt", 'r')
 	out = f.readlines()
 	for i in out:
-		listOfNums.append(int(i.strip())
+		listOfNums.append(int(i.strip()))
 	f.close()
 
 	if listOfNums.count(number) == 0:
@@ -177,7 +177,7 @@ def getOperationsAsString():
 @app.route("/get_update", methods = ['GET', 'POST'])
 def get_update():
 	number = request.headers['Number']
-	if(checkIfNumberIsIn(int(number)):
+	if(checkIfNumberIsIn(int(number))):
 		takeNumberOut(int(number))
 		return getOperationsAsString()
 	else:

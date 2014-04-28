@@ -670,6 +670,35 @@ class MainPage():
                 print "This is an Admin-Only command!"
 
 
+def dealWithUpdatingLocally(ops):
+    listOfOps = ops.split("\n")
+    for element in listOfOps:
+        if(element == "Up to date"):
+            return "Up to date"
+        else:
+            index = element.find(":")
+            command = element[:index]
+            theFile = element[index+3:]
+            print command
+            print theFile
+            if command == "Move":
+                print "Move"
+            elif command == "Transfer":
+                userDict = {"Path": theFile}
+                fileIn = requests.post(GET_FILE, headers=userDict)
+                print fileIn.content
+                h = open(theFile, 'w')
+                h.write(fileIn.content)
+                h.close()
+            elif command == "Delete":
+                print "Delete"
+            elif command == "DirCreate":
+                print "DirCreate"
+            elif command == "DirDelete":
+                print "DirDelete"
+            elif command == "DirMove":
+                print "DirMove"
+
 # The following two processes deal with the WatchDog commands being sent to the server.
 def runOneAuto():
     event_handler = MyHandler()
@@ -801,7 +830,8 @@ def runTwo():
             run.admin_get_user_logs()
         elif(StringInput.strip().lower() == "testupdate"):
             userDict = {"Number": str(GlobalUserNumber)}
-            print requests.post(GET_UPDATE, headers=userDict).text
+            ops = requests.post(GET_UPDATE, headers=userDict).text
+            dealWithUpdatingLocally(ops)
         elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "Test/test.txt"}
             theFile = requests.post(GET_FILE, headers=userDict)

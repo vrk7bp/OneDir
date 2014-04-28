@@ -667,6 +667,24 @@ def delete_direc():
 
 @app.route('/move_direc', methods=['GET', 'POST'])
 def moving_direc():
+	#Directory
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	login = check_login_id()
+	Directory = str(interVal[index+3:])
+
+	#Source
+	toIndex = Directory.find(":")
+	sourceTemp = Directory[0:toIndex-1]
+	indexSlashSource = sourceTemp.rfind("/")
+	source = "Users/" + login + "/" + sourceTemp
+
+	#dest
+	destTemp = Directory[toIndex+5:]
+	indexSlash = destTemp.rfind("/")
+	dest = "Users/" + login + destTemp
+
+	shutil.move(source, dest)
 	return "Directory Move"
 
 @app.route('/delete_file', methods=['GET', 'POST'])
@@ -680,6 +698,23 @@ def delete_file():
 
 @app.route('/move_file', methods=['GET', 'POST'])
 def moving_file():
+	#Directory
+	interVal = request.headers['Value']
+	index = interVal.find(":")
+	login = check_login_id()
+	Directory = str(interVal[index+3:])
+
+	#Source
+	toIndex = Directory.find(":", index+1)
+	sourceTemp = Directory[0:toIndex-1]
+	indexSlashSource = sourceTemp.rfind("/")
+	source = "Users/" + login + "/" + sourceTemp
+
+	#dest
+	destTemp = Directory[toIndex+5:]
+	indexSlash = destTemp.rfind("/")
+	dest = "Users/" + login + destTemp
+	shutil.move(source, dest)
 	return "File Move"
 
 @app.route('/file_transfer', methods=['GET', 'POST'])

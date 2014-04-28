@@ -683,7 +683,8 @@ def moving_direc():
 	destTemp = Directory[toIndex+5:]
 	indexSlash = destTemp.rfind("/")
 	dest = "Users/" + login + destTemp
-
+	return dest
+	
 	shutil.move(source, dest)
 	return "Directory Move"
 

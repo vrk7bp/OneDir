@@ -819,10 +819,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p1.start()
+	p2.start()
 	p4.start()
 	p5.start()
 
-	p1.join()
+	p2.join()
 	p4.join()
 	p5.join()

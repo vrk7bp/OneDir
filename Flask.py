@@ -123,6 +123,14 @@ def log_act(user, act):
     g.db.commit()
     return 0
 
+def makeListOfAccountLogIns():
+	open("../AccountNumbers.txt", 'w').close()
+	f = open("../AccountNumbers.txt", 'w')
+	for elements in range(1, AmountOfUsers):
+		stringNum = str(elements)
+		f.write(stringNum + "\n")
+	f.close()
+
 @app.route("/", methods = ['GET', 'POST'])
 def hello():
 	return "Hello World!"
@@ -170,7 +178,7 @@ def handle_login_cmd():
 				w.close()
 				log_act(id, "Logged in")
 				AmountOfUsers += 1
-				return "Login Successful (" + AmountOfUsers + ")"
+				return "Login Successful (" + str(AmountOfUsers) + ")"
 			else:
 				return "Wrong Password"
 	elif check_login_status():
@@ -196,7 +204,7 @@ def handle_alt_login():
 			return "Wrong Password"
 		log_act(currentUser, "Logged in from another computer")
 		AmountOfUsers += 1
-		return "Login Successful (" + AmountOfUsers + ")"
+		return "Login Successful (" + str(AmountOfUsers) + ")"
 	elif check_login_status():
 		return "Bad UserName"
 	else:

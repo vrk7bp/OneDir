@@ -25,6 +25,8 @@ LOGS_FOLDER = '/home/ubuntu/CS3240FinalProject/Logs'
 ACTIVITY_FOLDER = '/home/ubuntu/CS3240FinalProject/Statistics'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'])
 
+AmountOfUsers = 0
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['USER_FOLDER'] = USER_FOLDER
@@ -147,6 +149,7 @@ def check_if_one_login():
 
 @app.route("/login", methods = ['GET', 'POST'])
 def handle_login_cmd():
+	global AmountOfUsers
 	users = access_user_table()
 	id = request.headers['UserName']
 	password = request.headers['Password']
@@ -166,7 +169,8 @@ def handle_login_cmd():
 				w.write("True " + id)
 				w.close()
 				log_act(id, "Logged in")
-				return "Login Successful"
+				AmountOfUsers += 1
+				return "Login Successful (" + AmountOfUsers + ")"
 			else:
 				return "Wrong Password"
 	elif check_login_status():
@@ -176,6 +180,7 @@ def handle_login_cmd():
 
 @app.route("/alt_login", methods = ['GET', 'POST'])
 def handle_alt_login():
+	global AmountOfUsers
 	id = request.headers['UserName']
 	password = request.headers['Password']
 	currentUser = check_login_id()
@@ -190,7 +195,8 @@ def handle_alt_login():
 		if rightPassword == False:
 			return "Wrong Password"
 		log_act(currentUser, "Logged in from another computer")
-		return "Login Successful"
+		AmountOfUsers += 1
+		return "Login Successful (" + AmountOfUsers + ")"
 	elif check_login_status():
 		return "Bad UserName"
 	else:
@@ -401,11 +407,13 @@ def handle_admin_delete_user_cmd():
 
 @app.route("/logout", methods = ['GET', 'POST'])
 def handle_logout():
+	global AmountOfUsers
 	commandingUser = check_login_id()
 	log_act(commandingUser, "Logged Out")
 	w = open("login_info.txt", 'w')
 	w.write("False " + "None")
 	w.close()
+	AmountOfUsers = 0
 	return "Logged Out"
 
 @app.route("/admin_get_user_info", methods = ['GET', 'POST'])

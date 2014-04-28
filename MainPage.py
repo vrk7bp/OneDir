@@ -46,6 +46,7 @@ ADMIN_GET_USER_OPS = HOST + "/admin_get_user_operations"
 GlobalUpdateManagerNum = Value('i', 0) #0 is False, 1 is True
 GlobalAutoUpdate = Value('i', 1) #0 is UserUpdate, 1 is AutoUpdate
 GlobalChangeUpdate = Value('i', 0) #0 is don't change, 1 is change
+GlobalUserNumber = 0
 
 class FileHandler():
 
@@ -250,6 +251,7 @@ class MainPage():
     def LogInPartOne(self):
         StringUserName = None
         StringPassword = None
+        global GlobalUserNumber
         print("If this is your first time running OneDir and you want to make an account, simply type in 'new' for both the UserName and Password...")
         while(True):
             userName = raw_input("UserName: ")
@@ -275,8 +277,13 @@ class MainPage():
         if(boolValue == True):
             string = requests.post(LOGIN_URL, headers=userDict)
             returnBool = False;
-            if(str(string.text) == "Login Successful"):
-                returnBool = True;
+            if("Login Successful" in str(string.text)):
+                returnBool = True
+                indexOfPar = str(string.text).find("(")
+                indexOfPar2 = str(string.text).find(")")
+                intInString = str(string.text)[indexOfPar+1:indexOfPar2]
+                GlobalUserNumber = int(intInString)
+                print str(GlobalUserNumber)
             return (string.text, returnBool);
         else:
             return ("Username already in use!", False)
@@ -302,8 +309,13 @@ class MainPage():
         userDict = {'UserName': StringUserName, 'Password': StringPassword}
         string = requests.post(ALT_LOGIN, headers=userDict)
         returnBool = False;
-        if(str(string.text) == "Login Successful"):
+        if("Login Successful" in str(string.text)):
             returnBool = True;
+            indexOfPar = str(string.text).find("(")
+            indexOfPar2 = str(string.text).find(")")
+            intInString = str(string.text)[indexOfPar+1:indexOfPar2]
+            GlobalUserNumber = int(intInString)
+            print str(GlobalUserNumber)
         return (string.text, returnBool);
 
     def AddNewUser(self):

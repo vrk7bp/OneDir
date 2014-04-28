@@ -19,10 +19,10 @@ tableNameDU = "deleted_users"
 
 DATABASE = 'testUserDB'
 
-UPLOAD_FOLDER = '/home/student/CS3240FinalProject/TestFolder'
-USER_FOLDER = '/home/student/CS3240FinalProject/Users'
-LOGS_FOLDER = '/home/student/CS3240FinalProject/Logs'
-ACTIVITY_FOLDER = '/home/student/CS3240FinalProject/Statistics'
+UPLOAD_FOLDER = '/home/ubuntu/CS3240FinalProject/TestFolder'
+USER_FOLDER = '/home/ubuntu/CS3240FinalProject/Users'
+LOGS_FOLDER = '/home/ubuntu/CS3240FinalProject/Logs'
+ACTIVITY_FOLDER = '/home/ubuntu/CS3240FinalProject/Statistics'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'])
 
 app = Flask(__name__)

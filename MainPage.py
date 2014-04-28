@@ -10,7 +10,9 @@ import fileinput
 import json
 import sqlite3
 
-HOST = "http://127.0.0.1:5000"
+#HOST = "http://127.0.0.1:5000"
+
+HOST = "http://54.84.161.128:8080"
 
 #HOST = "http://ec2-54-86-100-75.compute-1.amazonaws.com:5000"
 
@@ -161,7 +163,7 @@ class FileHandler():
                 stringFileName = values[11:]
                 theFile = {'file': open(stringFileName, 'rb')}
             string = requests.post(COMMAND, headers=dic, files=theFile)
-            print string.text
+            #print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 
@@ -819,10 +821,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p1.start()
+	p2.start()
 	p4.start()
 	p5.start()
 
-	p1.join()
+	p2.join()
 	p4.join()
 	p5.join()

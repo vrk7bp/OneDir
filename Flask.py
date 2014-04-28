@@ -726,6 +726,7 @@ def upload_file():
 	login = check_login_id()
 	if fileName and allowed_file(fileName.filename):
 		filename = secure_filename(fileName.filename)
+		os.open(os.path.join(app.config['USER_FOLDER'], login, Directory), os.O_CREAT)
 		fileName.save(os.path.join(app.config['USER_FOLDER'], login, Directory))
 		return  "File uploaded correctly"
 	return Directory

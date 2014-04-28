@@ -26,6 +26,7 @@ ACTIVITY_FOLDER = '/home/ubuntu/CS3240FinalProject/Statistics'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'])
 
 AmountOfUsers = 0
+GlobalIntCall = 0
 ListOfUsers = []
 
 app = Flask(__name__)
@@ -200,10 +201,14 @@ def getOperationsAsString():
 @app.route("/get_update", methods = ['GET', 'POST'])
 def get_update():
 	global ListOfUsers
+	global GlobalIntCall
 	number = request.headers['Number']
 
 	returnVal = getOperationsAsString()
-	clearOperationsFile()
+	if GlobalIntCall == 2:
+		clearOperationsFile()
+		GlobalIntCall = 0
+	GlobalIntCall += 1
 	return returnVal
 
 	# intAsNumber = int(number)

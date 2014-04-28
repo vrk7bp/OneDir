@@ -761,6 +761,12 @@ def checkUpdateSettings(p1, p2, p3): #p1 is AutoUpdate process, p2, p3 is User U
 				p3.join()
 			GlobalChangeUpdate.value == 0
 
+def GetUpdateFromServer():
+    while(True):
+        ops = requests.post(GET_UPDATE, headers=userDict).text
+        dealWithUpdatingLocally(ops)
+
+
 ############# THEN I HAVE TO IMPLEMENT THAT HERE, WITH A VARIATION OF SHUTTING DOWN ONE PROCESS AND LAUNCHING ANOTHER, SO THAT I CAN SWITCH BETWEEN THE TWO
 # The following process deals with the user interface on the client side.
 def runTwo():
@@ -880,11 +886,14 @@ if __name__ == "__main__":
 	p4 = threading.Thread(target=runTwo)
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
+    p6 = Process(target=GetUpdateFromServer)
 
 	p2.start()
 	p4.start()
 	p5.start()
+    p6.start()
 
 	p2.join()
 	p4.join()
 	p5.join()
+    p6.join()

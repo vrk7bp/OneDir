@@ -522,6 +522,7 @@ def handle_logout():
 	w = open("login_info.txt", 'w')
 	w.write("False " + "None")
 	w.close()
+	clearOperationsFile()
 	AmountOfUsers = 0
 	ListOfUsers = []
 	return "Logged Out"

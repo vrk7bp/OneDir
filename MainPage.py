@@ -9,10 +9,11 @@ import requests
 import fileinput
 import json
 import sqlite3
+import shutil
 
 #HOST = "http://127.0.0.1:5000"
 
-HOST = "http://54.84.61.162:8080"
+HOST = "http://54.84.61.54:8080"
 
 #HOST = "http://ec2-54-86-100-75.compute-1.amazonaws.com:5000"
 
@@ -164,9 +165,12 @@ class FileHandler():
             theFile = {}
             if "Transfer: " in values:
                 stringFileName = values[11:]
-                theFile = {'file': open(stringFileName, 'rb')}
+                try:
+                    theFile = {'file': open(stringFileName, 'rb')}
+                except:
+                    theFile = {}
             string = requests.post(COMMAND, headers=dic, files=theFile)
-            #print string.text
+            print string.text
         open("../DoNotDelete.txt", 'w').close()
         return finalList
 
@@ -681,6 +685,9 @@ def dealWithUpdatingLocally(ops):
             index = element.find(":")
             command = element[:index]
             theFile = element[index+3:]
+            indexOfTo = theFile.find(":")
+            source = theFile[:indexOfTo-1]
+            dest = theFile[indexOfTo+6:]
             # print command
             # print theFile
             if command == "Move":
@@ -697,6 +704,8 @@ def dealWithUpdatingLocally(ops):
                 os.remove(theFile)
                 print "Delete"
             elif command == "DirCreate":
+                if os.path.exists(theFile):
+                    shutil.rmtree(theFile)
                 os.makedirs(theFile)
                 print "DirCreate"
             elif command == "DirDelete":
@@ -844,9 +853,9 @@ def runTwo():
             print theFile.content
         elif (StringInput.strip().lower() == "update"):
             userDict = {"Number": str(GlobalUserNumber)}
+            TheFileHandler.organizeFile()
             ops = requests.post(GET_UPDATE, headers=userDict).text
             print dealWithUpdatingLocally(ops)
-            TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):
             userDict = {'command': "This is the command..."}
             test = {'file': open('test.txt', 'rb')}
@@ -881,10 +890,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p2.start()
+	p1.start()
 	p4.start()
 	p5.start()
 
-	p2.join()
+	p1.join()
 	p4.join()
 	p5.join()

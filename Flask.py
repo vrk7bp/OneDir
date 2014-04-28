@@ -135,35 +135,54 @@ def makeListOfAccountLogIns():
 		f.close()
 
 def takeNumberOut(number):
-	with open("../AccountNumbers.txt") as f:
-		listOfNums = [int(line.strip()) for line in f]
-	# f = open("../AccountNumbers.txt", 'r')
-	# out = f.readlines()
-	# for i in out:
-	# 	listOfNums.append(int(i.strip()))
-	# f.close()
+	f = open("../AccountNumbers.txt", "r")
+	lines = f.readlines()
+	f.close()
+	f = open("../AccountNumbers.txt", "w")
+	for line in lines:
+		if line != str(number) + "\n"
+			f.write(line)
+	f.close()
 
-	listOfNums.remove(number)
+	# with open("../AccountNumbers.txt") as f:
+	# 	listOfNums = [int(line.strip()) for line in f]
+	# # f = open("../AccountNumbers.txt", 'r')
+	# # out = f.readlines()
+	# # for i in out:
+	# # 	listOfNums.append(int(i.strip()))
+	# # f.close()
 
-	open("../AccountNumbers.txt", 'w').close()
-	a = open("../AccountNumbers.txt", 'w')
-	for elements in range(len(listOfNums)):
-		stringNum = str(listOfNums[elements])
-		a.write(stringNum + "\n")
-	a.close()
+	# listOfNums.remove(number)
+
+	# open("../AccountNumbers.txt", 'w').close()
+	# a = open("../AccountNumbers.txt", 'w')
+	# for elements in range(len(listOfNums)):
+	# 	stringNum = str(listOfNums[elements])
+	# 	a.write(stringNum + "\n")
+	# a.close()
 
 def checkIfNumberIsIn(number):
-	with open("../AccountNumbers.txt") as f:
-		listOfNums = [int(line.strip()) for line in f]
-	# f = open("../AccountNumbers.txt", 'r')
-	# out = f.readlines()
-	# for i in out:
-	# 	listOfNums.append(int(i.strip()))
-	# f.close()
 
-	if listOfNums.count(int(number)) == 0:
-		return False
-	return True
+	f = open("../AccountNumbers.txt", "r")
+	lines = f.readlines()
+	f.close()
+	returnBool = False
+	for line in lines:
+		if line == str(number) + "\n"
+			returnBool = True
+	return returnBool
+
+	# with open("../AccountNumbers.txt") as f:
+	# 	listOfNums = [int(line.strip()) for line in f]
+	# # f = open("../AccountNumbers.txt", 'r')
+	# # out = f.readlines()
+	# # for i in out:
+	# # 	listOfNums.append(int(i.strip()))
+	# # f.close()
+
+	# if listOfNums.count(int(number)) == 0:
+	# 	return False
+	# return True
 
 def clearOperationsFile():
 	open("../OperationsToUpdate.txt", 'w').close()

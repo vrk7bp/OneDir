@@ -679,22 +679,26 @@ def dealWithUpdatingLocally(ops):
             index = element.find(":")
             command = element[:index]
             theFile = element[index+3:]
-            print command
-            print theFile
+            # print command
+            # print theFile
             if command == "Move":
+                shutil.move(source, dest)
                 print "Move"
             elif command == "Transfer":
                 userDict = {"Path": theFile}
                 fileIn = requests.post(GET_FILE, headers=userDict)
-                print fileIn.content
+                #print fileIn.content
                 h = open(theFile, 'w')
                 h.write(fileIn.content)
                 h.close()
             elif command == "Delete":
+                os.remove(theFile)
                 print "Delete"
             elif command == "DirCreate":
+                os.makedirs(theFile)
                 print "DirCreate"
             elif command == "DirDelete":
+                shutil.rmtree(theFile)
                 print "DirDelete"
             elif command == "DirMove":
                 print "DirMove"
@@ -831,12 +835,15 @@ def runTwo():
         elif(StringInput.strip().lower() == "testupdate"):
             userDict = {"Number": str(GlobalUserNumber)}
             ops = requests.post(GET_UPDATE, headers=userDict).text
-            dealWithUpdatingLocally(ops)
+            print dealWithUpdatingLocally(ops)
         elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "Test/test.txt"}
             theFile = requests.post(GET_FILE, headers=userDict)
             print theFile.content
         elif (StringInput.strip().lower() == "update"):
+            userDict = {"Number": str(GlobalUserNumber)}
+            ops = requests.post(GET_UPDATE, headers=userDict).text
+            print dealWithUpdatingLocally(ops)
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):
             userDict = {'command': "This is the command..."}
@@ -872,10 +879,10 @@ if __name__ == "__main__":
 	p4.daemon = True
 	p5 = Process(target=checkUpdateSettings, args=(p1, p2, p3))
 
-	p2.start()
+	p1.start()
 	p4.start()
 	p5.start()
 
-	p2.join()
+	p1.join()
 	p4.join()
 	p5.join()

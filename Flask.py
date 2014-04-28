@@ -202,12 +202,18 @@ def get_update():
 	global ListOfUsers
 	number = request.headers['Number']
 
-	intAsNumber = int(number)
-	if ListOfUsers.count(intAsNumber) == 0:
-		return "Up to date"
-	else:
-		ListOfUsers.remove(intAsNumber)
-		return getOperationsAsString()
+	returnVal = getOperationsAsString()
+	clearOperationsFile()
+	return returnVal
+
+	# intAsNumber = int(number)
+	# if ListOfUsers.count(intAsNumber) == 0:
+	# 	return "Up to date"
+	# else:
+	# 	ListOfUsers.remove(intAsNumber)
+	# 	returnVal = getOperationsAsString()
+	# 	clearOperationsFile()
+	# 	return returnVal
 
 @app.route("/get_the_file", methods = ['GET', 'POST'])
 def get_the_file():

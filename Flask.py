@@ -187,10 +187,13 @@ def checkIfNumberIsIn(number):
 	# return True
 
 def clearOperationsFile():
-	open("../OperationsToUpdate.txt", 'w').close()
-	f = open('../OperationsToUpdate.txt', 'r+')
-	f.truncate()
-	f.close()
+	os.remove("../OperationsToUpdate.txt")
+	fileObject = open("../OperationsToUpdate.txt", 'w')
+	fileObject.close()
+	# open("../OperationsToUpdate.txt", 'w').close()
+	# f = open('../OperationsToUpdate.txt', 'r+')
+	# f.truncate()
+	# f.close()
 
 def getOperationsAsString():
 	with open("../OperationsToUpdate.txt") as f:

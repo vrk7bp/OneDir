@@ -129,7 +129,7 @@ def makeListOfAccountLogIns():
 	else:
 		open("../AccountNumbers.txt", 'w').close()
 		f = open("../AccountNumbers.txt", 'w')
-		for elements in range(1, AmountOfUsers):
+		for elements in range(1, AmountOfUsers+1):
 			stringNum = str(elements)
 			f.write(stringNum + "\n")
 		f.close()

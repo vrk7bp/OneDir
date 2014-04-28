@@ -12,7 +12,7 @@ import sqlite3
 
 #HOST = "http://127.0.0.1:5000"
 
-HOST = "http://54.84.161.128:8080"
+HOST = "http://54.84.61.162:8080"
 
 #HOST = "http://ec2-54-86-100-75.compute-1.amazonaws.com:5000"
 

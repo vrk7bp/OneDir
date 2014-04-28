@@ -135,31 +135,31 @@ def makeListOfAccountLogIns():
 		f.close()
 
 def takeNumberOut(number):
-	f = open("../AccountNumbers.txt", "r")
-	lines = f.readlines()
-	f.close()
-	f = open("../AccountNumbers.txt", "w")
-	for line in lines:
-		if line != str(number) + "\n"
-			f.write(line)
-	f.close()
+	# f = open("../AccountNumbers.txt", "r")
+	# lines = f.readlines()
+	# f.close()
+	# f = open("../AccountNumbers.txt", "w")
+	# for line in lines:
+	# 	if line != str(number) + "\n":
+	# 		f.write(line)
+	# f.close()
 
 	# with open("../AccountNumbers.txt") as f:
 	# 	listOfNums = [int(line.strip()) for line in f]
-	# # f = open("../AccountNumbers.txt", 'r')
-	# # out = f.readlines()
-	# # for i in out:
-	# # 	listOfNums.append(int(i.strip()))
-	# # f.close()
+	f = open("../AccountNumbers.txt", 'r')
+	out = f.readlines()
+	for i in out:
+		listOfNums.append(int(i.strip()))
+	f.close()
 
-	# listOfNums.remove(number)
+	listOfNums.remove(number)
 
-	# open("../AccountNumbers.txt", 'w').close()
-	# a = open("../AccountNumbers.txt", 'w')
-	# for elements in range(len(listOfNums)):
-	# 	stringNum = str(listOfNums[elements])
-	# 	a.write(stringNum + "\n")
-	# a.close()
+	open("../AccountNumbers.txt", 'w').close()
+	a = open("../AccountNumbers.txt", 'w')
+	for elements in range(len(listOfNums)):
+		stringNum = str(listOfNums[elements])
+		a.write(stringNum + "\n")
+	a.close()
 
 def checkIfNumberIsIn(number):
 

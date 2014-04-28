@@ -26,6 +26,7 @@ ACTIVITY_FOLDER = '/home/ubuntu/CS3240FinalProject/Statistics'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'])
 
 AmountOfUsers = 0
+ListOfUsers = []
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -146,6 +147,7 @@ def takeNumberOut(number):
 
 	# with open("../AccountNumbers.txt") as f:
 	# 	listOfNums = [int(line.strip()) for line in f]
+	listOfNums = []
 	f = open("../AccountNumbers.txt", 'r')
 	out = f.readlines()
 	for i in out:
@@ -168,7 +170,7 @@ def checkIfNumberIsIn(number):
 	f.close()
 	returnBool = False
 	for line in lines:
-		if line == str(number) + "\n"
+		if line == str(number) + "\n":
 			returnBool = True
 	return returnBool
 
@@ -197,9 +199,15 @@ def getOperationsAsString():
 
 @app.route("/get_update", methods = ['GET', 'POST'])
 def get_update():
+	global ListOfUsers
 	number = request.headers['Number']
-	takeNumberOut(int(number))
-	return getOperationsAsString()
+
+	intAsNumber = int(number)
+	if ListOfUsers.count(intAsNumber) == 0:
+		return "Up to date"
+	else:
+		ListOfUsers.remove(intAsNumber)
+		return getOperationsAsString()
 
 @app.route("/get_the_file", methods = ['GET', 'POST'])
 def get_the_file():
@@ -236,6 +244,7 @@ def check_if_one_login():
 @app.route("/login", methods = ['GET', 'POST'])
 def handle_login_cmd():
 	global AmountOfUsers
+	global ListOfUsers
 	users = access_user_table()
 	id = request.headers['UserName']
 	password = request.headers['Password']
@@ -256,6 +265,7 @@ def handle_login_cmd():
 				w.close()
 				log_act(id, "Logged in")
 				AmountOfUsers += 1
+				ListOfUsers.append(AmountOfUsers)
 				return "Login Successful (" + str(AmountOfUsers) + ")"
 			else:
 				return "Wrong Password"
@@ -267,6 +277,7 @@ def handle_login_cmd():
 @app.route("/alt_login", methods = ['GET', 'POST'])
 def handle_alt_login():
 	global AmountOfUsers
+	global ListOfUsers
 	id = request.headers['UserName']
 	password = request.headers['Password']
 	currentUser = check_login_id()
@@ -282,6 +293,7 @@ def handle_alt_login():
 			return "Wrong Password"
 		log_act(currentUser, "Logged in from another computer")
 		AmountOfUsers += 1
+		ListOfUsers.append(AmountOfUsers)
 		return "Login Successful (" + str(AmountOfUsers) + ")"
 	elif check_login_status():
 		return "Bad UserName"
@@ -494,12 +506,14 @@ def handle_admin_delete_user_cmd():
 @app.route("/logout", methods = ['GET', 'POST'])
 def handle_logout():
 	global AmountOfUsers
+	global ListOfUsers
 	commandingUser = check_login_id()
 	log_act(commandingUser, "Logged Out")
 	w = open("login_info.txt", 'w')
 	w.write("False " + "None")
 	w.close()
 	AmountOfUsers = 0
+	ListOfUsers = []
 	return "Logged Out"
 
 @app.route("/admin_get_user_info", methods = ['GET', 'POST'])
@@ -678,6 +692,7 @@ def get_admin_logs():
 
 @app.route("/command", methods = ['GET', 'POST'])
 def handle_command():
+	global ListOfUsers
 	commandingUser = check_login_id()
 	command = request.headers['Value']
 	index = command.find(":")
@@ -688,6 +703,10 @@ def handle_command():
 		theFile = {}
 
 	makeListOfAccountLogIns()
+
+	ListOfUsers = []
+	for elements in range(AmountOfUsers):
+		ListOfUsers.append(elements+1)
 
 	w = open("Logs/" + login, 'a')
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" + "\n")

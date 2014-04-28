@@ -799,10 +799,10 @@ def runTwo():
             run.admin_user_deletes()
         elif(StringInput.strip() == "10"):
             run.admin_get_user_logs()
-        elif(String.string().lower() == "testupdate"):
+        elif(StringInput.strip().lower() == "testupdate"):
             userDict = {"Number": GlobalUserNumber}
             requests.post(GET_UPDATE, headers=userDict)
-        elif(String.string().lower() == "testfile"):
+        elif(StringInput.strip().lower() == "testfile"):
             userDict = {"Path": "login_info.txt"}
             requests.post(GET_UPDATE, headers=userDict)
         elif (StringInput.strip().lower() == "update"):

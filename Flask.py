@@ -146,7 +146,7 @@ def takeNumberOut(number):
 
 	open("../AccountNumbers.txt", 'w').close()
 	a = open("../AccountNumbers.txt", 'w')
-	for elements in len(listOfNums):
+	for elements in range(len(listOfNums)):
 		stringNum = str(listOfNums[elements])
 		a.write(stringNum + "\n")
 	a.close()

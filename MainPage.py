@@ -32,6 +32,8 @@ DELETE_DIREC = HOST + "/delete_direc"
 MOVE_DIREC = HOST + "/move_direc"
 DELETE_FILE = HOST + "/delete_file"
 MOVE_FILE = HOST + "/move_file"
+GET_FILE = HOST + "/get_the_file"
+GET_UPDATE = HOST + "/get_update"
 ## End
 
 ADMIN_CHANGE_PASS = HOST + "/admin_change_pswd"
@@ -797,6 +799,12 @@ def runTwo():
             run.admin_user_deletes()
         elif(StringInput.strip() == "10"):
             run.admin_get_user_logs()
+        elif(String.string().lower() == "testupdate"):
+            userDict = {"Number": GlobalUserNumber}
+            requests.post(GET_UPDATE, headers=userDict)
+        elif(String.string().lower() == "testfile"):
+            userDict = {"Path": "login_info.txt"}
+            requests.post(GET_UPDATE, headers=userDict)
         elif (StringInput.strip().lower() == "update"):
             TheFileHandler.organizeFile()
         elif(StringInput.strip().lower() == "test"):

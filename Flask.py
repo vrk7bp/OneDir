@@ -124,12 +124,72 @@ def log_act(user, act):
     return 0
 
 def makeListOfAccountLogIns():
-	open("../AccountNumbers.txt", 'w').close()
-	f = open("../AccountNumbers.txt", 'w')
-	for elements in range(1, AmountOfUsers):
-		stringNum = str(elements)
-		f.write(stringNum + "\n")
+	if AmountOfUsers == 0:
+		open("../AccountNumbers.txt", 'w').close()
+	else:
+		open("../AccountNumbers.txt", 'w').close()
+		f = open("../AccountNumbers.txt", 'w')
+		for elements in range(1, AmountOfUsers):
+			stringNum = str(elements)
+			f.write(stringNum + "\n")
+		f.close()
+
+def takeNumberOut(number):
+	listOfNums = []
+	f = open("../AccountNumbers.txt", 'r')
+	out = f.readlines()
+	for i in out:
+		listOfNums.append(int(i.strip())
 	f.close()
+
+	listOfNums.remove(number)
+
+	open("../AccountNumbers.txt", 'w').close()
+	a = open("../AccountNumbers.txt", 'w')
+	for elements in len(listOfNums):
+		stringNum = str(listOfNums[elements])
+		a.write(stringNum + "\n")
+	f.close()
+
+def checkIfNumberIsIn(number):
+	listOfNums = []
+	f = open("../AccountNumbers.txt", 'r')
+	out = f.readlines()
+	for i in out:
+		listOfNums.append(int(i.strip())
+	f.close()
+
+	if listOfNums.count(number) == 0:
+		return False
+	return True
+
+def clearOperationsFile():
+	open("../OperationsToUpdate.txt", 'w').close()
+
+def getOperationsAsString():
+	with open("../OperationsToUpdate.txt") as f:
+		content = f.readlines()
+	returnString = ""
+	for elements in content:
+		returnString += elements
+	return returnString
+
+@app.route("/get_update", methods = ['GET', 'POST'])
+def get_update():
+	number = request.headers['Number']
+	if(checkIfNumberIsIn(int(number)):
+		takeNumberOut(int(number))
+		return getOperationsAsString()
+	else:
+		return "Up to Date"
+
+@app.route("/get_the_file", methods = ['GET', 'POST'])
+def get_the_file():
+	path = request.headers['Path']
+	login = check_login_id()
+
+	return send_from_directory(app.config['USER_FOLDER'] + login, path)
+
 
 @app.route("/", methods = ['GET', 'POST'])
 def hello():
@@ -609,9 +669,15 @@ def handle_command():
 	except:
 		theFile = {}
 
+	makeListOfAccountLogIns()
+
 	w = open("Logs/" + login, 'a')
-	w.write(command + " (at " + str(datetime.datetime.now()) + ")" "\n")
+	w.write(command + " (at " + str(datetime.datetime.now()) + ")" + "\n")
 	w.close()
+
+	q = open("OperationsToUpdate", 'a')
+	q.write(command + "\n")
+	q.close()
 	#log_act(commandingUser, command)
 
 	content = []

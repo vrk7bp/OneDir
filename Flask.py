@@ -189,17 +189,21 @@ def checkIfNumberIsIn(number):
 def clearOperationsFile():
 	#os.remove("../OperationsToUpdate.txt")
 	#fileObject = open("../OperationsToUpdate.txt", 'w')
-	os.remove("OperationsToUpdate.txt")
-	fileObject = open("OperationsToUpdate.txt", 'w')
-	fileObject.close()
+	# os.remove("OperationsToUpdate.txt")
+	# fileObject = open("OperationsToUpdate.txt", 'w')
+	# fileObject.close()
+	cmdToRun1 = "sudo rm -rf ../OperationsToUpdate.txt"
+	cmdToRun2 = "touch ../OperationsToUpdate.txt"
+	os.system(cmdToRun1)
+	os.system(cmdToRun2)
+
 	# open("../OperationsToUpdate.txt", 'w').close()
 	# f = open('../OperationsToUpdate.txt', 'r+')
 	# f.truncate()
 	# f.close()
 
 def getOperationsAsString():
-	# with open("../OperationsToUpdate.txt") as f:
-	with open("OperationsToUpdate.txt") as f:
+	with open("../OperationsToUpdate.txt") as f:
 		content = f.readlines()
 	returnString = ""
 	for elements in content:
@@ -732,8 +736,8 @@ def handle_command():
 	w.write(command + " (at " + str(datetime.datetime.now()) + ")" + "\n")
 	w.close()
 
-	#q = open("../OperationsToUpdate.txt", 'a')
-	q = open("OperationsToUpdate.txt", 'a')
+	q = open("../OperationsToUpdate.txt", 'a')
+	#q = open("OperationsToUpdate.txt", 'a')
 	q.write(command + "\n")
 	q.close()
 	#log_act(commandingUser, command)

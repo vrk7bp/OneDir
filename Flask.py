@@ -136,6 +136,8 @@ def makeListOfAccountLogIns():
 
 def takeNumberOut(number):
 	listOfNums = [int(line.strip()) for line in open('../AccountNumbers.txt')]
+	for element in range(len(listOfNumbs)):
+		print str(element)
 	# f = open("../AccountNumbers.txt", 'r')
 	# out = f.readlines()
 	# for i in out:

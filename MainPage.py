@@ -701,7 +701,8 @@ def dealWithUpdatingLocally(ops):
                 h.write(fileIn.content)
                 h.close()
             elif command == "Delete":
-                os.remove(theFile)
+                if os.path.exists(theFile):
+                    os.remove(theFile)
                 print "Delete"
             elif command == "DirCreate":
                 if os.path.exists(theFile):
@@ -709,9 +710,11 @@ def dealWithUpdatingLocally(ops):
                 os.makedirs(theFile)
                 print "DirCreate"
             elif command == "DirDelete":
-                shutil.rmtree(theFile)
+                if os.path.exists(theFile):
+                    shutil.rmtree(theFile)
                 print "DirDelete"
             elif command == "DirMove":
+                shutil.move(source, dest)
                 print "DirMove"
 
 # The following two processes deal with the WatchDog commands being sent to the server.

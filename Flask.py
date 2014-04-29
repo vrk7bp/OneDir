@@ -740,7 +740,6 @@ def handle_command():
 	#q = open("OperationsToUpdate.txt", 'a')
 	q.write(command + "\n")
 	q.close()
-	#log_act(commandingUser, command)
 
 	content = []
 	with open("Statistics/TotalStats") as f:
